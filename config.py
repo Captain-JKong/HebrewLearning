@@ -66,12 +66,12 @@ class Themes:
         'trans_fg': '#1565c0',
         'english_bg': '#e8f5e9',
         'english_fg': '#2e7d32',
-        'btn_audio': '#2196f3',
-        'btn_answer': '#ff9800',
-        'btn_again': '#f44336',
-        'btn_hard': '#ff9800',
-        'btn_good': '#8bc34a',
-        'btn_easy': '#4caf50'
+        'btn_audio': '#607d8b',
+        'btn_answer': '#78909c',
+        'btn_again': '#e57373',
+        'btn_hard': '#ffb74d',
+        'btn_good': '#aed581',
+        'btn_easy': '#81c784'
     }
     
     DARK = {
@@ -83,12 +83,12 @@ class Themes:
         'trans_fg': '#81d4fa',
         'english_bg': '#1b5e20',
         'english_fg': '#a5d6a7',
-        'btn_audio': '#1976d2',
-        'btn_answer': '#f57c00',
-        'btn_again': '#d32f2f',
-        'btn_hard': '#f57c00',
-        'btn_good': '#689f38',
-        'btn_easy': '#388e3c'
+        'btn_audio': '#546e7a',
+        'btn_answer': '#5f7780',
+        'btn_again': '#c62828',
+        'btn_hard': '#e65100',
+        'btn_good': '#558b2f',
+        'btn_easy': '#2e7d32'
     }
     
     @staticmethod

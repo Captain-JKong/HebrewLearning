@@ -14,22 +14,76 @@ class UIBuilder:
         self.theme = theme
         self.widgets = {}
     
+    def _create_rounded_frame(self, parent, bg, radius=15):
+        """Create a frame with rounded corners using Canvas - properly handles theme changes"""
+        # Store parent reference to get current background dynamically
+        container = tk.Frame(parent, bg=bg, highlightthickness=0)
+        canvas = tk.Canvas(container, highlightthickness=0, bd=0)
+        canvas.pack(fill=tk.BOTH, expand=True)
+        
+        def draw_rounded_rect(event=None):
+            canvas.delete("all")
+            width = canvas.winfo_width()
+            height = canvas.winfo_height()
+            
+            # Get the actual parent background color dynamically
+            try:
+                parent_bg = parent.cget('bg')
+            except:
+                parent_bg = self.root.cget('bg')
+            
+            # Set canvas background to match parent (to blend corners)
+            canvas.config(bg=parent_bg)
+            
+            # Use the stored background color (updated by theme changes)
+            current_bg = container._bg_color
+            
+            # Create rounded rectangle with the content background
+            canvas.create_arc(0, 0, radius*2, radius*2, start=90, extent=90, fill=current_bg, outline=current_bg, tags="shape")
+            canvas.create_arc(width-radius*2, 0, width, radius*2, start=0, extent=90, fill=current_bg, outline=current_bg, tags="shape")
+            canvas.create_arc(0, height-radius*2, radius*2, height, start=180, extent=90, fill=current_bg, outline=current_bg, tags="shape")
+            canvas.create_arc(width-radius*2, height-radius*2, width, height, start=270, extent=90, fill=current_bg, outline=current_bg, tags="shape")
+            
+            canvas.create_rectangle(radius, 0, width-radius, height, fill=current_bg, outline=current_bg, tags="shape")
+            canvas.create_rectangle(0, radius, width, height-radius, fill=current_bg, outline=current_bg, tags="shape")
+        
+        canvas.bind('<Configure>', draw_rounded_rect)
+        container._canvas = canvas
+        container._bg_color = bg
+        container._radius = radius
+        container._parent_ref = parent
+        return container
+    
     def create_card_frame(self):
-        """Create main card frame"""
-        card_frame = tk.Frame(
-            self.root, 
-            bg=self.theme['card_bg'], 
-            relief=tk.FLAT, 
-            borderwidth=0, 
+        """Create main card frame with rounded corners"""
+        # Create rounded container for the main card
+        card_container = self._create_rounded_frame(self.root, self.theme['card_bg'], radius=20)
+        card_container.pack(pady=20, padx=40, fill=tk.BOTH, expand=True)
+        
+        # Create inner frame to hold content
+        inner_frame = tk.Frame(
+            card_container,
+            bg=self.theme['card_bg'],
+            relief=tk.FLAT,
+            borderwidth=0,
             highlightthickness=0
         )
-        card_frame.pack(pady=20, padx=40, fill=tk.BOTH, expand=True)
-        return card_frame
+        inner_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=0.96, relheight=0.96)
+        
+        # Store references for theme updates
+        inner_frame._parent = card_container
+        card_container._inner_frame = inner_frame
+        return inner_frame
     
     def create_text_widget(self, parent, height, font, bg, fg):
-        """Create a text display widget"""
+        """Create a text display widget with rounded corners"""
+        # Create rounded container
+        rounded_container = self._create_rounded_frame(parent, bg, radius=12)
+        rounded_container.pack(fill=tk.X, expand=False, pady=6, padx=12)
+        
+        # Create text widget inside the rounded container
         text_widget = tk.Text(
-            parent,
+            rounded_container,
             height=height,
             font=font,
             bg=bg,
@@ -38,27 +92,126 @@ class UIBuilder:
             borderwidth=0,
             highlightthickness=0,
             wrap=tk.WORD,
-            padx=20 if height > 2 else 15,
-            pady=15 if height > 2 else 10
+            padx=15,
+            pady=4
         )
-        text_widget.pack(fill=tk.BOTH if height > 2 else tk.X, expand=True if height > 2 else False, pady=8, padx=8)
+        # Center the text widget with minimal height (relheight based on height parameter)
+        relheight = 0.6 if height == 1 else 0.85
+        text_widget.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=0.96, relheight=relheight)
+        
+        # Store the container and background color for theme updates
+        text_widget._rounded_container = rounded_container
+        text_widget._rounded_bg = bg
         return text_widget
     
-    def create_button(self, parent, text, command, bg, **kwargs):
-        """Create a styled button"""
-        button = tk.Button(
+    def create_label(self, parent, text, font, bg, fg='#666', **kwargs):
+        """Create a label that properly handles theme changes"""
+        label = tk.Label(
             parent,
             text=text,
-            command=command,
+            font=font,
             bg=bg,
-            fg='white',
-            font=('Helvetica', kwargs.get('font_size', 12), 'bold'),
-            padx=kwargs.get('padx', 25),
-            pady=kwargs.get('pady', 14),
-            relief=tk.FLAT,
-            cursor='hand2'
+            fg=fg,
+            **kwargs
         )
-        return button
+        label._fg_color = fg  # Store for theme updates
+        return label
+    
+    def create_button(self, parent, text, command, bg, **kwargs):
+        """Create a clickable rounded button using Canvas"""
+        padx = kwargs.get('padx', 15)
+        pady = kwargs.get('pady', 8)
+        font_size = kwargs.get('font_size', 11)
+        
+        # Create canvas for rounded button
+        canvas = tk.Canvas(
+            parent,
+            highlightthickness=0,
+            bd=0,
+            bg=parent.cget('bg') if hasattr(parent, 'cget') else self.root.cget('bg')
+        )
+        
+        # Store properties
+        canvas._bg_color = bg
+        canvas._text = text
+        canvas._command = command
+        canvas._padx = padx
+        canvas._pady = pady
+        canvas._font_size = font_size
+        canvas._state = tk.NORMAL
+        canvas._is_canvas_button = True
+        
+        def draw_button():
+            """Draw the rounded button"""
+            canvas.delete("all")
+            
+            # Measure text size
+            font = ('Helvetica', font_size, 'bold')
+            temp_text = canvas.create_text(0, 0, text=text, font=font)
+            bbox = canvas.bbox(temp_text)
+            canvas.delete(temp_text)
+            
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+            
+            # Calculate canvas size
+            width = text_width + padx * 2
+            height = text_height + pady * 2
+            radius = 8
+            
+            # Update canvas size
+            canvas.config(width=width, height=height)
+            
+            # Get parent background
+            try:
+                parent_bg = parent.cget('bg')
+            except:
+                parent_bg = self.root.cget('bg')
+            canvas.config(bg=parent_bg)
+            
+            # Draw rounded rectangle
+            current_bg = canvas._bg_color
+            canvas.create_arc(0, 0, radius*2, radius*2, start=90, extent=90, fill=current_bg, outline=current_bg, tags="bg")
+            canvas.create_arc(width-radius*2, 0, width, radius*2, start=0, extent=90, fill=current_bg, outline=current_bg, tags="bg")
+            canvas.create_arc(0, height-radius*2, radius*2, height, start=180, extent=90, fill=current_bg, outline=current_bg, tags="bg")
+            canvas.create_arc(width-radius*2, height-radius*2, width, height, start=270, extent=90, fill=current_bg, outline=current_bg, tags="bg")
+            canvas.create_rectangle(radius, 0, width-radius, height, fill=current_bg, outline=current_bg, tags="bg")
+            canvas.create_rectangle(0, radius, width, height-radius, fill=current_bg, outline=current_bg, tags="bg")
+            
+            # Draw text
+            text_color = 'white' if canvas._state == tk.NORMAL else '#aaa'
+            canvas.create_text(
+                width/2, height/2,
+                text=text,
+                font=font,
+                fill=text_color,
+                tags="text"
+            )
+        
+        def on_click(event):
+            """Handle button click"""
+            if canvas._state == tk.NORMAL and canvas._command:
+                canvas._command()
+        
+        def on_enter(event):
+            """Handle mouse enter (hover effect)"""
+            if canvas._state == tk.NORMAL:
+                canvas.config(cursor='hand2')
+        
+        def on_leave(event):
+            """Handle mouse leave"""
+            canvas.config(cursor='')
+        
+        # Bind events
+        canvas.bind('<Button-1>', on_click)
+        canvas.bind('<Enter>', on_enter)
+        canvas.bind('<Leave>', on_leave)
+        
+        # Initial draw
+        canvas.after(10, draw_button)
+        canvas._draw_button = draw_button
+        
+        return canvas
     
     def update_text(self, text_widget, content):
         """Update text widget content"""
@@ -71,31 +224,99 @@ class UIBuilder:
         """Apply theme to widgets"""
         self.root.config(bg=theme['bg'])
         
+        # Update frames
+        for frame_name in ['top_bar', 'title_frame', 'theme_frame', 'button_frame', 'response_frame']:
+            if frame_name in widgets:
+                widgets[frame_name].config(bg=theme['bg'])
+        
+        # Update labels
+        label_mappings = [
+            ('title_label', theme.get('text_fg', '#000000')),
+            ('progress_label', '#888888' if theme['bg'] == '#1a1a1a' else '#666'),
+            ('stats_label', '#888888' if theme['bg'] == '#1a1a1a' else '#666'),
+            ('keyboard_hint', '#888888' if theme['bg'] == '#1a1a1a' else '#666666')
+        ]
+        
+        for label_name, fg_color in label_mappings:
+            if label_name in widgets:
+                widgets[label_name].config(bg=theme['bg'], fg=fg_color)
+        
+        # Update card frame
         if 'card_frame' in widgets:
-            widgets['card_frame'].config(bg=theme['card_bg'])
+            card_frame = widgets['card_frame']
+            card_frame.config(bg=theme['card_bg'])
+            # Update the canvas background for rounded corners
+            if hasattr(card_frame, '_parent') and hasattr(card_frame._parent, '_canvas'):
+                container = card_frame._parent
+                # Update stored color
+                container._bg_color = theme['card_bg']
+                container.config(bg=theme['card_bg'])
+                
+                # Trigger redraw using the stored draw function
+                canvas = container._canvas
+                canvas.event_generate('<Configure>')
         
-        if 'hebrew_text' in widgets:
-            widgets['hebrew_text'].config(bg=theme['text_bg'], fg=theme['text_fg'])
+        # Update text widgets and their rounded containers
+        text_widget_mappings = [
+            ('hebrew_text', 'text_bg', 'text_fg'),
+            ('trans_text', 'trans_bg', 'trans_fg'),
+            ('english_text', 'english_bg', 'english_fg')
+        ]
         
-        if 'trans_text' in widgets:
-            widgets['trans_text'].config(bg=theme['trans_bg'], fg=theme['trans_fg'])
+        for widget_name, bg_key, fg_key in text_widget_mappings:
+            if widget_name in widgets:
+                text_widget = widgets[widget_name]
+                new_bg = theme[bg_key]
+                new_fg = theme[fg_key]
+                
+                # Update text widget
+                text_widget.config(bg=new_bg, fg=new_fg)
+                
+                # Update rounded container canvas background
+                if hasattr(text_widget, '_rounded_container'):
+                    container = text_widget._rounded_container
+                    # Update stored color
+                    container._bg_color = new_bg
+                    container.config(bg=new_bg)
+                    
+                    # Trigger redraw using the stored draw function
+                    if hasattr(container, '_canvas'):
+                        canvas = container._canvas
+                        # Manually trigger the configure event to redraw
+                        canvas.event_generate('<Configure>')
         
-        if 'english_text' in widgets:
-            widgets['english_text'].config(bg=theme['english_bg'], fg=theme['english_fg'])
-        
-        # Update buttons
+        # Update buttons (now they are containers with canvas backgrounds)
         button_mappings = [
             ('audio_btn', 'btn_audio'),
             ('show_answer_btn', 'btn_answer'),
             ('again_btn', 'btn_again'),
             ('hard_btn', 'btn_hard'),
             ('good_btn', 'btn_good'),
-            ('easy_btn', 'btn_easy')
+            ('easy_btn', 'btn_easy'),
+            ('theme_toggle_btn', 'btn_audio')  # Use same gray color
         ]
         
         for widget_name, theme_key in button_mappings:
             if widget_name in widgets:
-                widgets[widget_name].config(bg=theme[theme_key])
+                button = widgets[widget_name]
+                new_bg = theme[theme_key]
+                
+                # Canvas button (rounded)
+                if hasattr(button, '_is_canvas_button'):
+                    button._bg_color = new_bg
+                    # Redraw with new colors
+                    if hasattr(button, '_draw_button'):
+                        button._draw_button()
+                # Simple button
+                elif hasattr(button, '_is_container') and not button._is_container:
+                    button.config(bg=new_bg)
+                    button._bg_color = new_bg
+                # Fallback
+                else:
+                    try:
+                        button.config(bg=new_bg)
+                    except:
+                        pass
 
 class DialogHelper:
     """Helper for creating dialogs"""
