@@ -205,3 +205,22 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ============================================
+# Project-specific: Hebrew Learning App
+# ============================================
+
+# User progress data (each user has their own)
+learning_progress.json
+
+# macOS files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# App icon (if you want to keep it out - optional)
+# HebrewLearning.icns
+
+# Large image files (optional)
+# *.png
