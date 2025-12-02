@@ -1,10 +1,175 @@
 """
 UI Components
 Builds and manages the graphical interface
+All UI configuration, themes, layout, fonts, colors, and widget creation in one place
 """
 
 import tkinter as tk
 from tkinter import messagebox
+
+
+# ============================================================================
+#                           UI CONFIGURATION SECTION
+#              ALL VISUAL SETTINGS ARE HERE FOR EASY CUSTOMIZATION
+# ============================================================================
+
+class UIConfig:
+    """All UI layout parameters - modify these to adjust the interface"""
+    
+    # ===== LAYOUT SPACING =====
+    WINDOW_TOP_PADDING = 20          # Space at top of window
+    WINDOW_SIDE_PADDING = 40         # Space on sides of window
+    CARD_FRAME_PADY = 20             # Vertical padding around main card
+    CARD_FRAME_PADX = 40             # Horizontal padding around main card
+    
+    # ===== TEXT BOXES =====
+    TEXT_BOX_VERTICAL_SPACING = 4    # Space between text boxes (pady)
+    TEXT_BOX_HORIZONTAL_PADDING = 12 # Side padding for text boxes (padx)
+    TEXT_BOX_BORDER_RADIUS = 12      # Corner roundness of text boxes
+    TEXT_BOX_INNER_PADX = 15         # Text padding inside box (horizontal)
+    TEXT_BOX_INNER_PADY = 4          # Text padding inside box (vertical)
+    TEXT_BOX_HEIGHT = 1              # Line height for text boxes
+    TEXT_BOX_REL_HEIGHT = 0.3        # Relative height (0.0-1.0) for single-line boxes
+    
+    # ===== FONTS =====
+    # Hebrew text
+    HEBREW_FONT_FAMILY = 'Arial Hebrew'
+    HEBREW_FONT_SIZE = 36
+    HEBREW_FONT_WEIGHT = 'bold'
+    
+    # Transliteration text
+    TRANS_FONT_FAMILY = 'Helvetica'
+    TRANS_FONT_SIZE = 18
+    TRANS_FONT_WEIGHT = 'normal'
+    
+    # English text
+    ENGLISH_FONT_FAMILY = 'Helvetica'
+    ENGLISH_FONT_SIZE = 20
+    ENGLISH_FONT_WEIGHT = 'bold'
+    
+    # Title
+    TITLE_FONT_FAMILY = 'Helvetica'
+    TITLE_FONT_SIZE = 24
+    TITLE_FONT_WEIGHT = 'bold'
+    
+    # Progress/Stats labels
+    LABEL_FONT_FAMILY = 'Helvetica'
+    LABEL_FONT_SIZE = 11
+    LABEL_FONT_WEIGHT = 'normal'
+    
+    # Keyboard hint
+    HINT_FONT_FAMILY = 'Helvetica'
+    HINT_FONT_SIZE = 9
+    HINT_FONT_WEIGHT = 'italic'
+    
+    # ===== BUTTONS =====
+    CARD_BORDER_RADIUS = 20          # Corner roundness of main card
+    BUTTON_BORDER_RADIUS = 8         # Corner roundness of buttons
+    
+    # Main buttons (Audio, Show Answer)
+    MAIN_BUTTON_PADX = 18
+    MAIN_BUTTON_PADY = 8
+    MAIN_BUTTON_FONT_SIZE = 11
+    MAIN_BUTTON_SPACING = 6          # Space between buttons (grid padx)
+    MAIN_BUTTON_ROW_SPACING = 5      # Vertical space (grid pady)
+    
+    # Response buttons (Again, Hard, Good, Easy)
+    RESPONSE_BUTTON_PADX = 14
+    RESPONSE_BUTTON_PADY = 7
+    RESPONSE_BUTTON_FONT_SIZE = 10
+    RESPONSE_BUTTON_SPACING = 3      # Space between buttons (grid padx)
+    RESPONSE_BUTTON_ROW_SPACING = 5  # Vertical space (grid pady)
+    
+    # Theme toggle button
+    THEME_BUTTON_PADX = 12
+    THEME_BUTTON_PADY = 8
+    THEME_BUTTON_FONT_SIZE = 18
+    
+    # ===== BUTTON FRAME SPACING =====
+    BUTTON_FRAME_PADY = 10           # Space above/below button frames
+    RESPONSE_FRAME_PADY = 10         # Space above/below response frame
+    KEYBOARD_HINT_TOP_PADDING = 10   # Space above keyboard hint
+    
+    # ===== TITLE SECTION =====
+    TITLE_BOTTOM_PADDING = 10        # Space below stats label
+    
+    @staticmethod
+    def get_hebrew_font():
+        """Get Hebrew text font tuple"""
+        return (UIConfig.HEBREW_FONT_FAMILY, UIConfig.HEBREW_FONT_SIZE, UIConfig.HEBREW_FONT_WEIGHT)
+    
+    @staticmethod
+    def get_trans_font():
+        """Get transliteration text font tuple"""
+        return (UIConfig.TRANS_FONT_FAMILY, UIConfig.TRANS_FONT_SIZE, UIConfig.TRANS_FONT_WEIGHT)
+    
+    @staticmethod
+    def get_english_font():
+        """Get English text font tuple"""
+        return (UIConfig.ENGLISH_FONT_FAMILY, UIConfig.ENGLISH_FONT_SIZE, UIConfig.ENGLISH_FONT_WEIGHT)
+    
+    @staticmethod
+    def get_title_font():
+        """Get title font tuple"""
+        return (UIConfig.TITLE_FONT_FAMILY, UIConfig.TITLE_FONT_SIZE, UIConfig.TITLE_FONT_WEIGHT)
+    
+    @staticmethod
+    def get_label_font():
+        """Get label font tuple"""
+        return (UIConfig.LABEL_FONT_FAMILY, UIConfig.LABEL_FONT_SIZE, UIConfig.LABEL_FONT_WEIGHT)
+    
+    @staticmethod
+    def get_hint_font():
+        """Get hint font tuple"""
+        return (UIConfig.HINT_FONT_FAMILY, UIConfig.HINT_FONT_SIZE, UIConfig.HINT_FONT_WEIGHT)
+
+
+class Themes:
+    """UI theme color definitions - modify these to change app colors"""
+    
+    LIGHT = {
+        'bg': '#f0f0f0',
+        'card_bg': '#ffffff',
+        'text_bg': '#f8f9fa',
+        'text_fg': '#2c3e50',
+        'trans_bg': '#e3f2fd',
+        'trans_fg': '#1565c0',
+        'english_bg': '#e8f5e9',
+        'english_fg': '#2e7d32',
+        'btn_audio': '#607d8b',
+        'btn_answer': '#78909c',
+        'btn_again': '#e57373',
+        'btn_hard': '#ffb74d',
+        'btn_good': '#aed581',
+        'btn_easy': '#81c784'
+    }
+    
+    DARK = {
+        'bg': '#1e1e1e',
+        'card_bg': '#2d2d2d',
+        'text_bg': '#3a3a3a',
+        'text_fg': '#e0e0e0',
+        'trans_bg': '#263238',
+        'trans_fg': '#81d4fa',
+        'english_bg': '#1b5e20',
+        'english_fg': '#a5d6a7',
+        'btn_audio': '#546e7a',
+        'btn_answer': '#5f7780',
+        'btn_again': '#c62828',
+        'btn_hard': '#e65100',
+        'btn_good': '#558b2f',
+        'btn_easy': '#2e7d32'
+    }
+    
+    @staticmethod
+    def get_theme(dark_mode=False):
+        """Get theme colors based on mode"""
+        return Themes.DARK if dark_mode else Themes.LIGHT
+
+
+# ============================================================================
+#                           UI BUILDER CLASSES
+# ============================================================================
 
 class UIBuilder:
     """Builds UI components"""
@@ -57,8 +222,17 @@ class UIBuilder:
     def create_card_frame(self):
         """Create main card frame with rounded corners"""
         # Create rounded container for the main card
-        card_container = self._create_rounded_frame(self.root, self.theme['card_bg'], radius=20)
-        card_container.pack(pady=20, padx=40, fill=tk.BOTH, expand=True)
+        card_container = self._create_rounded_frame(
+            self.root, 
+            self.theme['card_bg'], 
+            radius=UIConfig.CARD_BORDER_RADIUS
+        )
+        card_container.pack(
+            pady=UIConfig.CARD_FRAME_PADY, 
+            padx=UIConfig.CARD_FRAME_PADX, 
+            fill=tk.BOTH, 
+            expand=True
+        )
         
         # Create inner frame to hold content
         inner_frame = tk.Frame(
@@ -78,8 +252,17 @@ class UIBuilder:
     def create_text_widget(self, parent, height, font, bg, fg):
         """Create a text display widget with rounded corners"""
         # Create rounded container
-        rounded_container = self._create_rounded_frame(parent, bg, radius=12)
-        rounded_container.pack(fill=tk.X, expand=False, pady=6, padx=12)
+        rounded_container = self._create_rounded_frame(
+            parent, 
+            bg, 
+            radius=UIConfig.TEXT_BOX_BORDER_RADIUS
+        )
+        rounded_container.pack(
+            fill=tk.X, 
+            expand=False, 
+            pady=UIConfig.TEXT_BOX_VERTICAL_SPACING, 
+            padx=UIConfig.TEXT_BOX_HORIZONTAL_PADDING
+        )
         
         # Create text widget inside the rounded container
         text_widget = tk.Text(
@@ -92,11 +275,11 @@ class UIBuilder:
             borderwidth=0,
             highlightthickness=0,
             wrap=tk.WORD,
-            padx=15,
-            pady=4
+            padx=UIConfig.TEXT_BOX_INNER_PADX,
+            pady=UIConfig.TEXT_BOX_INNER_PADY
         )
         # Center the text widget with minimal height (relheight based on height parameter)
-        relheight = 0.6 if height == 1 else 0.85
+        relheight = UIConfig.TEXT_BOX_REL_HEIGHT if height == 1 else 0.85
         text_widget.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=0.96, relheight=relheight)
         
         # Store the container and background color for theme updates
@@ -157,7 +340,7 @@ class UIBuilder:
             # Calculate canvas size
             width = text_width + padx * 2
             height = text_height + pady * 2
-            radius = 8
+            radius = UIConfig.BUTTON_BORDER_RADIUS
             
             # Update canvas size
             canvas.config(width=width, height=height)
@@ -219,6 +402,237 @@ class UIBuilder:
         text_widget.delete('1.0', tk.END)
         text_widget.insert('1.0', content)
         text_widget.config(state=tk.DISABLED)
+    
+    def build_complete_interface(self, callbacks):
+        """
+        Build the complete user interface with all widgets
+        
+        Args:
+            callbacks: Dictionary with callback functions:
+                - 'toggle_theme': Function to toggle dark/light mode
+                - 'play_audio': Function to play audio
+                - 'show_answer': Function to show answer
+                - 'mark_again': Function to mark word as 'again'
+                - 'mark_hard': Function to mark word as 'hard'
+                - 'mark_good': Function to mark word as 'good'
+                - 'mark_easy': Function to mark word as 'easy'
+        
+        Returns:
+            Dictionary containing all created widgets with keys:
+            - Frames: 'top_bar', 'title_frame', 'theme_frame', 'card_frame', 
+                     'button_frame', 'response_frame'
+            - Labels: 'title_label', 'progress_label', 'stats_label', 'keyboard_hint'
+            - Text widgets: 'hebrew_text', 'trans_text', 'english_text'
+            - Buttons: 'theme_toggle_btn', 'audio_btn', 'show_answer_btn',
+                      'again_btn', 'hard_btn', 'good_btn', 'easy_btn'
+        """
+        widgets = {}
+        
+        # ===== TOP BAR WITH TITLE AND THEME TOGGLE =====
+        top_bar = tk.Frame(self.root, bg=self.theme['bg'])
+        top_bar.pack(
+            pady=UIConfig.WINDOW_TOP_PADDING, 
+            fill=tk.X, 
+            padx=UIConfig.WINDOW_SIDE_PADDING
+        )
+        widgets['top_bar'] = top_bar
+        
+        # Title frame (left side)
+        title_frame = tk.Frame(top_bar, bg=self.theme['bg'])
+        title_frame.pack(side=tk.LEFT)
+        widgets['title_frame'] = title_frame
+        
+        # Main title
+        widgets['title_label'] = self.create_label(
+            title_frame,
+            text="Hebrew Learning App",
+            font=UIConfig.get_title_font(),
+            bg=self.theme['bg'],
+            fg=self.theme.get('text_fg', '#000000')
+        )
+        widgets['title_label'].pack()
+        
+        # Progress label
+        widgets['progress_label'] = self.create_label(
+            title_frame,
+            text="",
+            font=UIConfig.get_label_font(),
+            bg=self.theme['bg'],
+            fg='#666'
+        )
+        widgets['progress_label'].pack()
+        
+        # Stats label
+        widgets['stats_label'] = self.create_label(
+            title_frame,
+            text="",
+            font=UIConfig.get_label_font(),
+            bg=self.theme['bg'],
+            fg='#666'
+        )
+        widgets['stats_label'].pack(pady=UIConfig.TITLE_BOTTOM_PADDING)
+        
+        # Theme toggle button (right side)
+        theme_frame = tk.Frame(top_bar, bg=self.theme['bg'])
+        theme_frame.pack(side=tk.RIGHT)
+        widgets['theme_frame'] = theme_frame
+        
+        widgets['theme_toggle_btn'] = self.create_button(
+            theme_frame,
+            "🌙",  # Will be updated based on dark_mode
+            callbacks['toggle_theme'],
+            '#546e7a',
+            font_size=UIConfig.THEME_BUTTON_FONT_SIZE,
+            padx=UIConfig.THEME_BUTTON_PADX,
+            pady=UIConfig.THEME_BUTTON_PADY
+        )
+        widgets['theme_toggle_btn'].pack()
+        
+        # ===== MAIN CARD FRAME =====
+        widgets['card_frame'] = self.create_card_frame()
+        
+        # ===== TEXT DISPLAY WIDGETS =====
+        # Hebrew text
+        widgets['hebrew_text'] = self.create_text_widget(
+            widgets['card_frame'],
+            UIConfig.TEXT_BOX_HEIGHT,
+            UIConfig.get_hebrew_font(),
+            self.theme['text_bg'],
+            self.theme['text_fg']
+        )
+        
+        # Transliteration text
+        widgets['trans_text'] = self.create_text_widget(
+            widgets['card_frame'],
+            UIConfig.TEXT_BOX_HEIGHT,
+            UIConfig.get_trans_font(),
+            self.theme['trans_bg'],
+            self.theme['trans_fg']
+        )
+        
+        # English text
+        widgets['english_text'] = self.create_text_widget(
+            widgets['card_frame'],
+            UIConfig.TEXT_BOX_HEIGHT,
+            UIConfig.get_english_font(),
+            self.theme['english_bg'],
+            self.theme['english_fg']
+        )
+        
+        # ===== CONTROL BUTTONS (AUDIO & SHOW ANSWER) =====
+        button_frame = tk.Frame(self.root, bg=self.theme['bg'])
+        button_frame.pack(pady=UIConfig.BUTTON_FRAME_PADY)
+        widgets['button_frame'] = button_frame
+        
+        widgets['audio_btn'] = self.create_button(
+            button_frame,
+            "🔊 Play Audio",
+            callbacks['play_audio'],
+            self.theme['btn_audio'],
+            padx=UIConfig.MAIN_BUTTON_PADX,
+            pady=UIConfig.MAIN_BUTTON_PADY,
+            font_size=UIConfig.MAIN_BUTTON_FONT_SIZE
+        )
+        widgets['audio_btn'].grid(
+            row=0, column=0,
+            padx=UIConfig.MAIN_BUTTON_SPACING,
+            pady=UIConfig.MAIN_BUTTON_ROW_SPACING
+        )
+        
+        widgets['show_answer_btn'] = self.create_button(
+            button_frame,
+            "👁 Show Answer",
+            callbacks['show_answer'],
+            self.theme['btn_answer'],
+            padx=UIConfig.MAIN_BUTTON_PADX,
+            pady=UIConfig.MAIN_BUTTON_PADY,
+            font_size=UIConfig.MAIN_BUTTON_FONT_SIZE
+        )
+        widgets['show_answer_btn'].grid(
+            row=0, column=1,
+            padx=UIConfig.MAIN_BUTTON_SPACING,
+            pady=UIConfig.MAIN_BUTTON_ROW_SPACING
+        )
+        
+        # ===== RESPONSE BUTTONS (AGAIN, HARD, GOOD, EASY) =====
+        response_frame = tk.Frame(self.root, bg=self.theme['bg'])
+        response_frame.pack(pady=UIConfig.RESPONSE_FRAME_PADY)
+        widgets['response_frame'] = response_frame
+        
+        widgets['again_btn'] = self.create_button(
+            response_frame,
+            "Again (1)",
+            callbacks['mark_again'],
+            self.theme['btn_again'],
+            font_size=UIConfig.RESPONSE_BUTTON_FONT_SIZE,
+            padx=UIConfig.RESPONSE_BUTTON_PADX,
+            pady=UIConfig.RESPONSE_BUTTON_PADY
+        )
+        widgets['again_btn'].grid(
+            row=0, column=0,
+            padx=UIConfig.RESPONSE_BUTTON_SPACING,
+            pady=UIConfig.RESPONSE_BUTTON_ROW_SPACING
+        )
+        
+        widgets['hard_btn'] = self.create_button(
+            response_frame,
+            "Hard (2)",
+            callbacks['mark_hard'],
+            self.theme['btn_hard'],
+            font_size=UIConfig.RESPONSE_BUTTON_FONT_SIZE,
+            padx=UIConfig.RESPONSE_BUTTON_PADX,
+            pady=UIConfig.RESPONSE_BUTTON_PADY
+        )
+        widgets['hard_btn'].grid(
+            row=0, column=1,
+            padx=UIConfig.RESPONSE_BUTTON_SPACING,
+            pady=UIConfig.RESPONSE_BUTTON_ROW_SPACING
+        )
+        
+        widgets['good_btn'] = self.create_button(
+            response_frame,
+            "Good (3)",
+            callbacks['mark_good'],
+            self.theme['btn_good'],
+            font_size=UIConfig.RESPONSE_BUTTON_FONT_SIZE,
+            padx=UIConfig.RESPONSE_BUTTON_PADX,
+            pady=UIConfig.RESPONSE_BUTTON_PADY
+        )
+        widgets['good_btn'].grid(
+            row=0, column=2,
+            padx=UIConfig.RESPONSE_BUTTON_SPACING,
+            pady=UIConfig.RESPONSE_BUTTON_ROW_SPACING
+        )
+        
+        widgets['easy_btn'] = self.create_button(
+            response_frame,
+            "Easy (4)",
+            callbacks['mark_easy'],
+            self.theme['btn_easy'],
+            font_size=UIConfig.RESPONSE_BUTTON_FONT_SIZE,
+            padx=UIConfig.RESPONSE_BUTTON_PADX,
+            pady=UIConfig.RESPONSE_BUTTON_PADY
+        )
+        widgets['easy_btn'].grid(
+            row=0, column=3,
+            padx=UIConfig.RESPONSE_BUTTON_SPACING,
+            pady=UIConfig.RESPONSE_BUTTON_ROW_SPACING
+        )
+        
+        # ===== KEYBOARD SHORTCUTS HINT =====
+        widgets['keyboard_hint'] = self.create_label(
+            response_frame,
+            text="Keyboard: 1=Again  2=Hard  3=Good  4=Easy  |  Space=Show  P=Audio",
+            font=UIConfig.get_hint_font(),
+            bg=self.theme['bg'],
+            fg='#666666'
+        )
+        widgets['keyboard_hint'].grid(
+            row=1, column=0, columnspan=4,
+            pady=(UIConfig.KEYBOARD_HINT_TOP_PADDING, 0)
+        )
+        
+        return widgets
     
     def apply_theme(self, widgets, theme):
         """Apply theme to widgets"""

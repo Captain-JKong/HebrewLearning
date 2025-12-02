@@ -8,11 +8,11 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 import random
 
-from config import Config, Themes
+from config import Config
 from data_manager import VocabularyManager, ProgressManager
 from audio_player import AudioPlayer
 from session_manager import SessionManager
-from ui_components import UIBuilder, DialogHelper
+from ui_components import UIBuilder, DialogHelper, Themes
 
 class HebrewLearningApp:
     """Main application class"""
@@ -51,9 +51,8 @@ class HebrewLearningApp:
         self._set_icon()
         
         # Build interface
-        self.widgets = {}
         self.create_menu()
-        self.create_main_interface()
+        self.widgets = self.create_main_interface()
         self.setup_keyboard_shortcuts()
     
     def _set_icon(self):
@@ -113,150 +112,42 @@ class HebrewLearningApp:
         help_menu.add_command(label="About", command=self.show_about)
     
     def create_main_interface(self):
-        """Create the main interface"""
-        # Top bar with title and theme toggle
-        top_bar = tk.Frame(self.root, bg=self.theme['bg'])
-        top_bar.pack(pady=20, fill=tk.X, padx=40)
+        """Create the main interface - all UI details are in ui_components.py"""
+        # Define callback functions for the UI
+        callbacks = {
+            'toggle_theme': self.toggle_theme,
+            'play_audio': self.play_audio,
+            'show_answer': self.show_answer,
+            'mark_again': lambda: self.mark_answer('again'),
+            'mark_hard': lambda: self.mark_answer('hard'),
+            'mark_good': lambda: self.mark_answer('good'),
+            'mark_easy': lambda: self.mark_answer('easy')
+        }
         
-        # Title frame (left side)
-        title_frame = tk.Frame(top_bar, bg=self.theme['bg'])
-        title_frame.pack(side=tk.LEFT)
+        # Build complete interface with all widgets
+        widgets = self.ui_builder.build_complete_interface(callbacks)
         
-        self.widgets['title_label'] = self.ui_builder.create_label(
-            title_frame,
-            text="Hebrew Learning App",
-            font=('Helvetica', 24, 'bold'),
-            bg=self.theme['bg'],
-            fg=self.theme.get('text_fg', '#000000')
-        )
-        self.widgets['title_label'].pack()
+        # Update theme toggle button icon based on current mode
+        widgets['theme_toggle_btn']._text = "☀️" if self.dark_mode else "🌙"
+        if hasattr(widgets['theme_toggle_btn'], '_draw_button'):
+            widgets['theme_toggle_btn']._draw_button()
         
-        # Theme toggle button (right side)
-        theme_frame = tk.Frame(top_bar, bg=self.theme['bg'])
-        theme_frame.pack(side=tk.RIGHT)
-        
-        self.widgets['theme_toggle_btn'] = self.ui_builder.create_button(
-            theme_frame,
-            "🌙" if not self.dark_mode else "☀️",
-            self.toggle_theme,
-            '#546e7a',
-            font_size=18,
-            padx=12,
-            pady=8
-        )
-        self.widgets['theme_toggle_btn'].pack()
-        
-        self.widgets['top_bar'] = top_bar
-        self.widgets['title_frame'] = title_frame
-        self.widgets['theme_frame'] = theme_frame
-        
-        self.progress_label = self.ui_builder.create_label(
-            title_frame,
-            text="",
-            font=('Helvetica', 11),
-            bg=self.theme['bg'],
-            fg='#666'
-        )
-        self.widgets['progress_label'] = self.progress_label
-        self.progress_label.pack()
-        
-        self.stats_label = self.ui_builder.create_label(
-            title_frame,
-            text="",
-            font=('Helvetica', 11),
-            bg=self.theme['bg'],
-            fg='#666'
-        )
-        self.widgets['stats_label'] = self.stats_label
-        self.stats_label.pack(pady=10)
-        
-        self.widgets['title_frame'] = title_frame
-        
-        # Card frame
-        self.widgets['card_frame'] = self.ui_builder.create_card_frame()
-        
-        # Text widgets
-        self.widgets['hebrew_text'] = self.ui_builder.create_text_widget(
-            self.widgets['card_frame'], 1, ('Arial Hebrew', 36, 'bold'),
-            self.theme['text_bg'], self.theme['text_fg']
-        )
-        
-        self.widgets['trans_text'] = self.ui_builder.create_text_widget(
-            self.widgets['card_frame'], 1, ('Helvetica', 18),
-            self.theme['trans_bg'], self.theme['trans_fg']
-        )
-        
-        self.widgets['english_text'] = self.ui_builder.create_text_widget(
-            self.widgets['card_frame'], 1, ('Helvetica', 20, 'bold'),
-            self.theme['english_bg'], self.theme['english_fg']
-        )
-        
-        # Control buttons
-        button_frame = tk.Frame(self.root, bg=self.theme['bg'])
-        button_frame.pack(pady=10)
-        self.widgets['button_frame'] = button_frame
-        
-        self.widgets['audio_btn'] = self.ui_builder.create_button(
-            button_frame, "🔊 Play Audio", self.play_audio,
-            self.theme['btn_audio'], padx=18, pady=8
-        )
-        self.widgets['audio_btn'].grid(row=0, column=0, padx=6, pady=5)
-        
-        self.widgets['show_answer_btn'] = self.ui_builder.create_button(
-            button_frame, "👁 Show Answer", self.show_answer,
-            self.theme['btn_answer'], padx=18, pady=8
-        )
-        self.widgets['show_answer_btn'].grid(row=0, column=1, padx=6, pady=5)
-        
-        # Response buttons
-        self.response_frame = tk.Frame(self.root, bg=self.theme['bg'])
-        self.response_frame.pack(pady=10)
-        self.widgets['response_frame'] = self.response_frame
-        
-        self.widgets['again_btn'] = self.ui_builder.create_button(
-            self.response_frame, "Again (1)", lambda: self.mark_answer('again'),
-            self.theme['btn_again'], font_size=10, padx=14, pady=7
-        )
-        self.widgets['again_btn'].grid(row=0, column=0, padx=3, pady=5)
-        
-        self.widgets['hard_btn'] = self.ui_builder.create_button(
-            self.response_frame, "Hard (2)", lambda: self.mark_answer('hard'),
-            self.theme['btn_hard'], font_size=10, padx=14, pady=7
-        )
-        self.widgets['hard_btn'].grid(row=0, column=1, padx=3, pady=5)
-        
-        self.widgets['good_btn'] = self.ui_builder.create_button(
-            self.response_frame, "Good (3)", lambda: self.mark_answer('good'),
-            self.theme['btn_good'], font_size=10, padx=14, pady=7
-        )
-        self.widgets['good_btn'].grid(row=0, column=2, padx=3, pady=5)
-        
-        self.widgets['easy_btn'] = self.ui_builder.create_button(
-            self.response_frame, "Easy (4)", lambda: self.mark_answer('easy'),
-            self.theme['btn_easy'], font_size=10, padx=14, pady=7
-        )
-        self.widgets['easy_btn'].grid(row=0, column=3, padx=3, pady=5)
-        
-        # Keyboard shortcuts hint
-        self.widgets['keyboard_hint'] = self.ui_builder.create_label(
-            self.response_frame,
-            text="Keyboard: 1=Again  2=Hard  3=Good  4=Easy  |  Space=Show  P=Audio",
-            font=('Helvetica', 9, 'italic'),
-            bg=self.theme['bg'],
-            fg='#666666'
-        )
-        self.widgets['keyboard_hint'].grid(row=1, column=0, columnspan=4, pady=(10, 0))
+        # Store references to labels for easy access
+        self.progress_label = widgets['progress_label']
+        self.stats_label = widgets['stats_label']
         
         # Initialize display
-        self._show_welcome_message()
-        self._hide_response_buttons()
-        self._set_button_state('audio_btn', tk.DISABLED)
-        self._set_button_state('show_answer_btn', tk.DISABLED)
+        self._show_welcome_message(widgets)
+        self._hide_response_buttons(widgets)
+        self._set_button_state(widgets, 'audio_btn', tk.DISABLED)
+        self._set_button_state(widgets, 'show_answer_btn', tk.DISABLED)
+        
+        return widgets
     
-    def _set_button_state(self, button_name, state):
+    def _set_button_state(self, widgets, button_name, state):
         """Set button state (handles canvas buttons, simple buttons, and containers)"""
-        if button_name in self.widgets:
-            button = self.widgets[button_name]
+        if button_name in widgets:
+            button = widgets[button_name]
             
             # Canvas button (rounded)
             if hasattr(button, '_is_canvas_button'):
@@ -271,26 +162,26 @@ class HebrewLearningApp:
             else:
                 button.config(state=state)
     
-    def _show_welcome_message(self):
+    def _show_welcome_message(self, widgets):
         """Show welcome message"""
-        self.ui_builder.update_text(self.widgets['hebrew_text'], "Welcome! 🎓")
+        self.ui_builder.update_text(widgets['hebrew_text'], "Welcome! 🎓")
         self.ui_builder.update_text(
-            self.widgets['trans_text'],
+            widgets['trans_text'],
             "Select 'Study' from the menu bar above\nto begin learning Hebrew!"
         )
-        self.ui_builder.update_text(self.widgets['english_text'], "")
+        self.ui_builder.update_text(widgets['english_text'], "")
     
-    def _hide_response_buttons(self):
+    def _hide_response_buttons(self, widgets):
         """Hide all response buttons"""
         for btn_name in ['again_btn', 'hard_btn', 'good_btn', 'easy_btn']:
-            self.widgets[btn_name].grid_remove()
-            self._set_button_state(btn_name, tk.DISABLED)
+            widgets[btn_name].grid_remove()
+            self._set_button_state(widgets, btn_name, tk.DISABLED)
     
-    def _show_response_buttons(self):
+    def _show_response_buttons(self, widgets):
         """Show all response buttons"""
         for btn_name in ['again_btn', 'hard_btn', 'good_btn', 'easy_btn']:
-            self.widgets[btn_name].grid()
-            self._set_button_state(btn_name, tk.NORMAL)
+            widgets[btn_name].grid()
+            self._set_button_state(widgets, btn_name, tk.NORMAL)
     
     def start_session(self, limit):
         """Start a study session"""
@@ -344,9 +235,9 @@ class HebrewLearningApp:
         self.stats_label.config(text=self.session.get_progress_text())
         
         # Enable buttons
-        self._set_button_state('audio_btn', tk.NORMAL)
-        self._set_button_state('show_answer_btn', tk.NORMAL)
-        self._hide_response_buttons()
+        self._set_button_state(self.widgets, 'audio_btn', tk.NORMAL)
+        self._set_button_state(self.widgets, 'show_answer_btn', tk.NORMAL)
+        self._hide_response_buttons(self.widgets)
         
         # Auto-play audio
         if self.auto_play_audio:
@@ -360,7 +251,7 @@ class HebrewLearningApp:
                 self.widgets['english_text'],
                 self.session.current_word['english']
             )
-            self._show_response_buttons()
+            self._show_response_buttons(self.widgets)
     
     def mark_answer(self, confidence_level):
         """Mark answer with confidence level"""
@@ -394,9 +285,9 @@ class HebrewLearningApp:
         )
         self.ui_builder.update_text(self.widgets['english_text'], "")
         
-        self._set_button_state('audio_btn', tk.DISABLED)
-        self._set_button_state('show_answer_btn', tk.DISABLED)
-        self._hide_response_buttons()
+        self._set_button_state(self.widgets, 'audio_btn', tk.DISABLED)
+        self._set_button_state(self.widgets, 'show_answer_btn', tk.DISABLED)
+        self._hide_response_buttons(self.widgets)
         
         self.progress_label.config(text="Select 'Study' to start a new session")
     
