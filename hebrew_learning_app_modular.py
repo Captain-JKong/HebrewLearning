@@ -72,15 +72,63 @@ class HebrewLearningApp:
         # Study Menu
         study_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Study", menu=study_menu)
-        study_menu.add_command(label="Top 50 Words", command=lambda: self.start_session(50))
-        study_menu.add_command(label="Top 100 Words", command=lambda: self.start_session(100))
-        study_menu.add_command(label="Top 200 Words", command=lambda: self.start_session(200))
-        study_menu.add_command(label="All Words (300)", command=lambda: self.start_session(None))
+        
+        # Quick Start submenu
+        quick_menu = tk.Menu(study_menu, tearoff=0)
+        study_menu.add_cascade(label="Quick Start", menu=quick_menu)
+        quick_menu.add_command(label="Top 50 Words", command=lambda: self.start_session(50))
+        quick_menu.add_command(label="Top 100 Words", command=lambda: self.start_session(100))
+        quick_menu.add_command(label="Top 200 Words", command=lambda: self.start_session(200))
+        quick_menu.add_command(label="All Words", command=lambda: self.start_session(None))
+        quick_menu.add_separator()
+        quick_menu.add_command(label="Custom Range...", command=self.show_custom_range_dialog)
+        
         study_menu.add_separator()
-        study_menu.add_command(label="Custom Range...", command=self.show_custom_range_dialog)
+        
+        # Smart Study submenu
+        smart_menu = tk.Menu(study_menu, tearoff=0)
+        study_menu.add_cascade(label="Smart Study", menu=smart_menu)
+        smart_menu.add_command(label="SRS Review (Due Today)", command=self.start_srs_session)
+        smart_menu.add_command(label="Learn New Words", command=self.start_new_words_session)
+        smart_menu.add_command(label="Review Weakest Words", command=self.start_weak_words_session)
+        smart_menu.add_command(label="Review Strongest Words", command=self.start_strong_words_session)
+        smart_menu.add_separator()
+        smart_menu.add_command(label="Practice Difficult (Top 50)", command=lambda: self.practice_difficult_words(50))
+        smart_menu.add_command(label="Practice Difficult (Top 100)", command=lambda: self.practice_difficult_words(100))
+        
         study_menu.add_separator()
-        study_menu.add_command(label="Practice Hard/Again in Top 50", command=lambda: self.practice_difficult_words(50))
-        study_menu.add_command(label="Practice Hard/Again in Top 100", command=lambda: self.practice_difficult_words(100))
+        
+        # By Category submenu
+        category_menu = tk.Menu(study_menu, tearoff=0)
+        study_menu.add_cascade(label="By Category", menu=category_menu)
+        category_menu.add_command(label="Greetings", command=lambda: self.start_category_session("Greetings"))
+        category_menu.add_command(label="Common Words", command=lambda: self.start_category_session("Common Words"))
+        category_menu.add_command(label="Verbs", command=lambda: self.start_category_session("Verbs"))
+        category_menu.add_command(label="Nouns", command=lambda: self.start_category_session("Nouns"))
+        category_menu.add_command(label="Adjectives", command=lambda: self.start_category_session("Adjectives"))
+        category_menu.add_separator()
+        category_menu.add_command(label="Biblical Hebrew", command=lambda: self.start_category_session("Biblical Hebrew"))
+        category_menu.add_command(label="Torah", command=lambda: self.start_category_session("Torah"))
+        category_menu.add_separator()
+        category_menu.add_command(label="Prepositions", command=lambda: self.start_category_session("Prepositions"))
+        category_menu.add_command(label="Basic Vocabulary", command=lambda: self.start_category_session("Basic Vocabulary"))
+        
+        study_menu.add_separator()
+        
+        # By Type submenu
+        type_menu = tk.Menu(study_menu, tearoff=0)
+        study_menu.add_cascade(label="By Type", menu=type_menu)
+        type_menu.add_command(label="Modern Hebrew", command=lambda: self.start_register_session("modern"))
+        type_menu.add_command(label="Biblical Hebrew", command=lambda: self.start_register_session("biblical"))
+        type_menu.add_command(label="Both Modern & Biblical", command=lambda: self.start_register_session("both"))
+        type_menu.add_separator()
+        type_menu.add_command(label="Verbs Only", command=lambda: self.start_part_of_speech_session("verb"))
+        type_menu.add_command(label="Nouns Only", command=lambda: self.start_part_of_speech_session("noun"))
+        type_menu.add_command(label="Adjectives Only", command=lambda: self.start_part_of_speech_session("adjective"))
+        type_menu.add_command(label="Prepositions Only", command=lambda: self.start_part_of_speech_session("preposition"))
+        
+        study_menu.add_separator()
+        study_menu.add_command(label="Random 10 Words", command=self.start_random_session)
         
         # Vocabulary Menu
         vocab_menu = tk.Menu(menubar, tearoff=0)
@@ -209,11 +257,106 @@ class HebrewLearningApp:
         if count == 0:
             messagebox.showinfo(
                 "Practice",
-                f"No words needing practice in top {top_n}!\\n"
+                f"No words needing practice in top {top_n}!\n"
                 f"All words are marked as Good or Easy."
             )
             return
         self.progress_label.config(text=f"Practicing {count} Words Needing Review in Top {top_n}")
+        self.show_next_word()
+    
+    # ========== NEW STUDY MODE HANDLERS ==========
+    
+    def start_srs_session(self):
+        """Start SRS review session"""
+        count = self.session.start_srs_session()
+        if count == 0:
+            messagebox.showinfo(
+                "SRS Review",
+                "No words due for review today!\n"
+                "Come back tomorrow or study new words."
+            )
+            return
+        self.progress_label.config(text=f"SRS Review: {count} words due today")
+        self.show_next_word()
+    
+    def start_new_words_session(self):
+        """Start learning new words session"""
+        count = self.session.start_new_words_session(limit=10)
+        if count == 0:
+            messagebox.showinfo(
+                "New Words",
+                "You've already reviewed all words!\n"
+                "Great job!"
+            )
+            return
+        self.progress_label.config(text=f"Learning {count} New Words")
+        self.show_next_word()
+    
+    def start_category_session(self, category):
+        """Start category-based session"""
+        count = self.session.start_category_session(category)
+        if count == 0:
+            messagebox.showinfo(
+                "Category",
+                f"No words found in category: {category}"
+            )
+            return
+        self.progress_label.config(text=f"Category: {category} ({count} words)")
+        self.show_next_word()
+    
+    def start_register_session(self, register):
+        """Start register-based session (modern/biblical/both)"""
+        count = self.session.start_register_session(register)
+        if count == 0:
+            messagebox.showinfo(
+                "Register",
+                f"No words found for register: {register}"
+            )
+            return
+        register_label = {"modern": "Modern Hebrew", "biblical": "Biblical Hebrew", "both": "Modern & Biblical"}
+        self.progress_label.config(text=f"{register_label.get(register, register)}: {count} words")
+        self.show_next_word()
+    
+    def start_part_of_speech_session(self, pos):
+        """Start part-of-speech session"""
+        count = self.session.start_part_of_speech_session(pos)
+        if count == 0:
+            messagebox.showinfo(
+                "Part of Speech",
+                f"No {pos}s found in vocabulary"
+            )
+            return
+        self.progress_label.config(text=f"{pos.title()}s: {count} words")
+        self.show_next_word()
+    
+    def start_weak_words_session(self):
+        """Start weakest words session"""
+        count = self.session.start_weak_words_session(limit=20)
+        if count == 0:
+            messagebox.showinfo(
+                "Weak Words",
+                "No words with progress data found"
+            )
+            return
+        self.progress_label.config(text=f"Reviewing 20 Weakest Words ({count} found)")
+        self.show_next_word()
+    
+    def start_strong_words_session(self):
+        """Start strongest words session"""
+        count = self.session.start_strong_words_session(limit=20)
+        if count == 0:
+            messagebox.showinfo(
+                "Strong Words",
+                "No words with progress data found"
+            )
+            return
+        self.progress_label.config(text=f"Reviewing 20 Strongest Words ({count} found)")
+        self.show_next_word()
+    
+    def start_random_session(self):
+        """Start random words session"""
+        count = self.session.start_random_session(count=10)
+        self.progress_label.config(text=f"Random Selection: {count} words")
         self.show_next_word()
     
     def show_next_word(self):
@@ -258,7 +401,8 @@ class HebrewLearningApp:
         if not self.session.current_word:
             return
         
-        word_key = f"{self.session.current_word['rank']}_{self.session.current_word['hebrew']}"
+        # Use lemma_id for database (new system) or construct old key for backward compatibility
+        word_key = self.session.current_word.get('lemma_id', f"{self.session.current_word['rank']}_{self.session.current_word['hebrew']}")
         
         # Update progress
         score = self.progress_manager.mark_word(self.progress, word_key, confidence_level)

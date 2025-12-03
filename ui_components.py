@@ -797,12 +797,20 @@ class DialogHelper:
     @staticmethod
     def show_statistics(vocabulary_count, progress):
         """Show vocabulary statistics"""
-        easy = len(progress.get('easy', []))
-        good = len(progress.get('good', []))
-        hard = len(progress.get('hard', []))
-        again = len(progress.get('again', []))
-        studied = easy + good + hard + again
-        not_studied = vocabulary_count - studied
+        # Handle new database format (integers) or old format (lists)
+        if isinstance(progress.get('easy'), int):
+            easy = progress.get('easy', 0)
+            good = progress.get('good', 0)
+            hard = progress.get('hard', 0)
+            again = progress.get('again', 0)
+            not_studied = progress.get('not_studied', 0)
+        else:
+            easy = len(progress.get('easy', []))
+            good = len(progress.get('good', []))
+            hard = len(progress.get('hard', []))
+            again = len(progress.get('again', []))
+            studied = easy + good + hard + again
+            not_studied = vocabulary_count - studied
         
         # Get highest confidence words
         confidence = progress.get('confidence_scores', {})
