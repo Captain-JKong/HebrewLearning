@@ -17,19 +17,19 @@ class UIConfig:
     """All UI layout parameters - modify these to adjust the interface"""
     
     # ===== LAYOUT SPACING =====
-    WINDOW_TOP_PADDING = 20          # Space at top of window
+    WINDOW_TOP_PADDING = 15          # Space at top of window (reduced from 20)
     WINDOW_SIDE_PADDING = 40         # Space on sides of window
-    CARD_FRAME_PADY = 20             # Vertical padding around main card
+    CARD_FRAME_PADY = 15             # Vertical padding around main card (reduced from 20)
     CARD_FRAME_PADX = 40             # Horizontal padding around main card
     
     # ===== TEXT BOXES =====
-    TEXT_BOX_VERTICAL_SPACING = 4    # Space between text boxes (pady)
+    TEXT_BOX_VERTICAL_SPACING = 3    # Space between text boxes (pady) - reduced from 4
     TEXT_BOX_HORIZONTAL_PADDING = 12 # Side padding for text boxes (padx)
     TEXT_BOX_BORDER_RADIUS = 12      # Corner roundness of text boxes
-    TEXT_BOX_INNER_PADX = 15         # Text padding inside box (horizontal)
-    TEXT_BOX_INNER_PADY = 4          # Text padding inside box (vertical)
+    TEXT_BOX_INNER_PADX = 10         # Text padding inside box (horizontal) - reduced from 15
+    TEXT_BOX_INNER_PADY = 5          # Text padding inside box (vertical) - increased to 5 for better spacing
     TEXT_BOX_HEIGHT = 1              # Line height for text boxes
-    TEXT_BOX_REL_HEIGHT = 0.3        # Relative height (0.0-1.0) for single-line boxes
+    TEXT_BOX_REL_HEIGHT = 0.3        # Relative height (0.0-1.0) for single-line boxes (DEPRECATED - no longer used)
     
     # ===== FONTS =====
     # Hebrew text
@@ -136,6 +136,10 @@ class Themes:
         'trans_fg': '#1565c0',
         'english_bg': '#e8f5e9',
         'english_fg': '#2e7d32',
+        'info_bg': '#f8f9fa',
+        'info_fg': '#495057',
+        'label_fg': '#666666',
+        'hint_fg': '#666666',
         'btn_audio': '#607d8b',
         'btn_answer': '#78909c',
         'btn_again': '#e57373',
@@ -153,6 +157,10 @@ class Themes:
         'trans_fg': '#81d4fa',
         'english_bg': '#1b5e20',
         'english_fg': '#a5d6a7',
+        'info_bg': '#3a3a3a',
+        'info_fg': '#e0e0e0',
+        'label_fg': '#888888',
+        'hint_fg': '#888888',
         'btn_audio': '#546e7a',
         'btn_answer': '#5f7780',
         'btn_again': '#c62828',
@@ -251,7 +259,14 @@ class UIBuilder:
     
     def create_text_widget(self, parent, height, font, bg, fg):
         """Create a text display widget with rounded corners"""
-        # Create rounded container
+        # Calculate fixed height for the container
+        # Hebrew needs more height (60px) due to large font, others need less (48px)
+        if height == 1:
+            container_height = 60  # Fixed height for single line boxes (increased for Hebrew)
+        else:
+            container_height = 85  # Fixed height for multi-line boxes
+        
+        # Create rounded container with FIXED height
         rounded_container = self._create_rounded_frame(
             parent, 
             bg, 
@@ -263,6 +278,9 @@ class UIBuilder:
             pady=UIConfig.TEXT_BOX_VERTICAL_SPACING, 
             padx=UIConfig.TEXT_BOX_HORIZONTAL_PADDING
         )
+        # CRITICAL: Set fixed height on the container to prevent expansion
+        rounded_container.config(height=container_height)
+        rounded_container.pack_propagate(False)  # Prevent children from resizing container
         
         # Create text widget inside the rounded container
         text_widget = tk.Text(
@@ -278,9 +296,8 @@ class UIBuilder:
             padx=UIConfig.TEXT_BOX_INNER_PADX,
             pady=UIConfig.TEXT_BOX_INNER_PADY
         )
-        # Center the text widget with minimal height (relheight based on height parameter)
-        relheight = UIConfig.TEXT_BOX_REL_HEIGHT if height == 1 else 0.85
-        text_widget.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=0.96, relheight=relheight)
+        # Place text widget to fill the container
+        text_widget.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=0.96, relheight=0.85)
         
         # Store the container and background color for theme updates
         text_widget._rounded_container = rounded_container
@@ -448,7 +465,7 @@ class UIBuilder:
             text="Hebrew Learning App",
             font=UIConfig.get_title_font(),
             bg=self.theme['bg'],
-            fg=self.theme.get('text_fg', '#000000')
+            fg=self.theme['text_fg']
         )
         widgets['title_label'].pack()
         
@@ -458,7 +475,7 @@ class UIBuilder:
             text="",
             font=UIConfig.get_label_font(),
             bg=self.theme['bg'],
-            fg='#666'
+            fg=self.theme['label_fg']
         )
         widgets['progress_label'].pack()
         
@@ -468,7 +485,7 @@ class UIBuilder:
             text="",
             font=UIConfig.get_label_font(),
             bg=self.theme['bg'],
-            fg='#666'
+            fg=self.theme['label_fg']
         )
         widgets['stats_label'].pack(pady=UIConfig.TITLE_BOTTOM_PADDING)
         
@@ -481,7 +498,7 @@ class UIBuilder:
             theme_frame,
             "🌙",  # Will be updated based on dark_mode
             callbacks['toggle_theme'],
-            '#546e7a',
+            self.theme['btn_audio'],
             font_size=UIConfig.THEME_BUTTON_FONT_SIZE,
             padx=UIConfig.THEME_BUTTON_PADX,
             pady=UIConfig.THEME_BUTTON_PADY
@@ -518,6 +535,81 @@ class UIBuilder:
             self.theme['english_bg'],
             self.theme['english_fg']
         )
+        
+        # ===== EXTRA INFO BOX (ROOT, NOTES, VARIANTS, TRANSLATIONS) =====
+        # Create a fourth rounded box to contain all extra info
+        info_container = self._create_rounded_frame(
+            widgets['card_frame'],
+            self.theme['info_bg'],
+            radius=UIConfig.TEXT_BOX_BORDER_RADIUS
+        )
+        info_container.pack(
+            fill=tk.BOTH,
+            expand=False,
+            pady=UIConfig.TEXT_BOX_VERTICAL_SPACING,
+            padx=UIConfig.TEXT_BOX_HORIZONTAL_PADDING
+        )
+        info_container.config(height=100)
+        info_container.pack_propagate(False)
+        
+        # Create inner frame for info labels
+        info_inner = tk.Frame(info_container, bg=self.theme['info_bg'])
+        info_inner.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=0.96, relheight=0.85)
+        
+        # Root label - larger font
+        widgets['root_text'] = self.create_label(
+            info_inner,
+            text="",
+            font=(UIConfig.TRANS_FONT_FAMILY, 12, 'normal'),
+            bg=self.theme['info_bg'],
+            fg=self.theme['info_fg'],
+            anchor='w',
+            justify=tk.LEFT
+        )
+        widgets['root_text'].pack(fill=tk.X, padx=5, pady=2, anchor='w')
+        
+        # Notes label - larger font
+        widgets['notes_text'] = self.create_label(
+            info_inner,
+            text="",
+            font=(UIConfig.TRANS_FONT_FAMILY, 12, 'italic'),
+            bg=self.theme['info_bg'],
+            fg=self.theme['info_fg'],
+            anchor='w',
+            justify=tk.LEFT,
+            wraplength=600
+        )
+        widgets['notes_text'].pack(fill=tk.X, padx=5, pady=2, anchor='w')
+        
+        # Variants label - larger font
+        widgets['variants_text'] = self.create_label(
+            info_inner,
+            text="",
+            font=(UIConfig.TRANS_FONT_FAMILY, 12, 'normal'),
+            bg=self.theme['info_bg'],
+            fg=self.theme['info_fg'],
+            anchor='w',
+            justify=tk.LEFT,
+            wraplength=600
+        )
+        widgets['variants_text'].pack(fill=tk.X, padx=5, pady=2, anchor='w')
+        
+        # Translations label - larger font
+        widgets['translations_text'] = self.create_label(
+            info_inner,
+            text="",
+            font=(UIConfig.TRANS_FONT_FAMILY, 12, 'normal'),
+            bg=self.theme['info_bg'],
+            fg=self.theme['info_fg'],
+            anchor='w',
+            justify=tk.LEFT,
+            wraplength=600
+        )
+        widgets['translations_text'].pack(fill=tk.X, padx=5, pady=2, anchor='w')
+        
+        # Store info container for theme updates
+        widgets['info_container'] = info_container
+        widgets['info_inner'] = info_inner
         
         # ===== CONTROL BUTTONS (AUDIO & SHOW ANSWER) =====
         button_frame = tk.Frame(self.root, bg=self.theme['bg'])
@@ -625,7 +717,7 @@ class UIBuilder:
             text="Keyboard: 1=Again  2=Hard  3=Good  4=Easy  |  Space=Show  P=Audio",
             font=UIConfig.get_hint_font(),
             bg=self.theme['bg'],
-            fg='#666666'
+            fg=self.theme['hint_fg']
         )
         widgets['keyboard_hint'].grid(
             row=1, column=0, columnspan=4,
@@ -645,10 +737,10 @@ class UIBuilder:
         
         # Update labels
         label_mappings = [
-            ('title_label', theme.get('text_fg', '#000000')),
-            ('progress_label', '#888888' if theme['bg'] == '#1a1a1a' else '#666'),
-            ('stats_label', '#888888' if theme['bg'] == '#1a1a1a' else '#666'),
-            ('keyboard_hint', '#888888' if theme['bg'] == '#1a1a1a' else '#666666')
+            ('title_label', theme['text_fg']),
+            ('progress_label', theme['label_fg']),
+            ('stats_label', theme['label_fg']),
+            ('keyboard_hint', theme['hint_fg'])
         ]
         
         for label_name, fg_color in label_mappings:
@@ -698,6 +790,23 @@ class UIBuilder:
                         canvas = container._canvas
                         # Manually trigger the configure event to redraw
                         canvas.event_generate('<Configure>')
+        
+        # Update info box (fourth box with root, notes, variants, translations)
+        if 'info_container' in widgets and 'info_inner' in widgets:
+            # Update container
+            info_container = widgets['info_container']
+            info_container._bg_color = theme['info_bg']
+            info_container.config(bg=theme['info_bg'])
+            if hasattr(info_container, '_canvas'):
+                info_container._canvas.event_generate('<Configure>')
+            
+            # Update inner frame
+            widgets['info_inner'].config(bg=theme['info_bg'])
+            
+            # Update all info labels
+            for label_name in ['root_text', 'notes_text', 'variants_text', 'translations_text']:
+                if label_name in widgets:
+                    widgets[label_name].config(bg=theme['info_bg'], fg=theme['info_fg'])
         
         # Update buttons (now they are containers with canvas backgrounds)
         button_mappings = [

@@ -17,7 +17,7 @@ class Config:
     
     # Window settings (basic window size only)
     WINDOW_WIDTH = 700
-    WINDOW_HEIGHT = 550
+    WINDOW_HEIGHT = 720
     
     # File names
     VOCAB_FILE = 'hebrew_vocabulary.csv'

@@ -98,7 +98,7 @@ class DatabaseManager:
         self.connection.commit()
     
     def populate_sample_data(self):
-        """Populate database with 30 sample words for testing"""
+        """Populate database with 50 sample words for testing"""
         cursor = self.connection.cursor()
         
         # Check if data already exists
@@ -107,9 +107,9 @@ class DatabaseManager:
             print("Database already contains data. Skipping sample data insertion.")
             return
         
-        print("Populating database with 30 sample words...")
+        print("Populating database with 50 sample words...")
         
-        # Sample data: 30 words with diverse attributes
+        # Sample data: 50 words with diverse attributes
         lemmas_data = [
             # Modern Hebrew - Common words
             (1, 'שלום', 'interjection', 'shalom', 'peace / hello / goodbye', 'both', 'Most common greeting', 'שלם', None, 1),
@@ -152,6 +152,27 @@ class DatabaseManager:
             (28, 'אל', 'preposition', 'el', 'to / toward / God', 'both', 'Also used as name for God', None, None, 28),
             (29, 'על', 'preposition', 'al', 'on / about / concerning', 'both', None, None, None, 29),
             (30, 'את', 'particle', 'et', 'direct object marker / you (f.s.)', 'both', 'Untranslatable particle or pronoun', None, None, 30),
+            # Additional words to reach 50
+            (31, 'ילד', 'noun', 'yeled', 'boy / child', 'both', None, 'ילד', None, 31),
+            (32, 'אישה', 'noun', 'isha', 'woman', 'both', None, 'אשה', None, 32),
+            (33, 'ילדה', 'noun', 'yalda', 'girl', 'both', None, 'ילד', None, 33),
+            (34, 'מורה', 'noun', 'moreh', 'teacher', 'both', None, 'למד', None, 34),
+            (35, 'תלמיד', 'noun', 'talmid', 'student', 'both', None, 'למד', None, 35),
+            (36, 'עיר', 'noun', 'ir', 'city', 'both', None, 'עיר', None, 36),
+            (37, 'חבר', 'noun', 'chaver', 'friend (m.)', 'both', None, 'חבר', None, 37),
+            (38, 'חברה', 'noun', 'chavera', 'friend (f.) / company', 'both', None, 'חבר', None, 38),
+            (39, 'רץ', 'verb', 'ratz', 'run / runs (m.s.)', 'both', None, 'רץ', None, 39),
+            (40, 'עובד', 'verb', 'oved', 'work (m.s.)', 'both', None, 'עבד', None, 40),
+            (41, 'שוק', 'noun', 'shuk', 'market', 'modern', None, 'שוק', None, 41),
+            (42, 'מחשב', 'noun', 'machshev', 'computer', 'modern', None, 'חשב', None, 42),
+            (43, 'שפה', 'noun', 'safa', 'language', 'both', None, 'שפה', None, 43),
+            (44, 'כסף', 'noun', 'kesef', 'money', 'modern', None, 'כסף', None, 44),
+            (45, 'חדר', 'noun', 'kheder', 'room', 'both', None, 'חדר', None, 45),
+            (46, 'רחוב', 'noun', 'rekhov', 'street', 'both', None, 'רחוב', None, 46),
+            (47, 'שיר', 'noun', 'shir', 'song', 'both', None, 'שיר', None, 47),
+            (48, 'מוזיקה', 'noun', 'muzika', 'music', 'modern', None, 'זמר', None, 48),
+            (49, 'דלת', 'noun', 'delet', 'door', 'both', None, 'דלת', None, 49),
+            (50, 'חלון', 'noun', 'khalon', 'window', 'both', None, 'חלון', None, 50),
         ]
         
         cursor.executemany('''
@@ -189,6 +210,29 @@ class DatabaseManager:
             (12, 'הולכת', 'feminine singular'),
             (12, 'הולכים', 'masculine plural'),
             (12, 'הלכתי', 'past 1st person singular'),
+            # Variants for newly added lemmas
+            (31, 'ילדים', 'plural'),
+            (31, 'ילדי', 'my child / children (construct)'),
+            (32, 'נשים', 'plural'),
+            (33, 'ילדות', 'plural / childhood'),
+            (34, 'מורות', 'female teachers (plural)'),
+            (35, 'תלמידים', 'students (m.pl.)'),
+            (36, 'ערים', 'cities (plural)'),
+            (37, 'חברים', 'friends (m.pl.)'),
+            (38, 'חברות', 'friends (f.pl.) / companies (f.pl.)'),
+            (39, 'רץ', 'present m.s. / root form'),
+            (40, 'עובדת', 'feminine singular'),
+            (40, 'עובדים', 'masculine plural'),
+            (41, 'שוקים', 'markets (plural)'),
+            (42, 'מחשבים', 'computers (plural)'),
+            (43, 'שפות', 'languages (plural)'),
+            (44, 'כספים', 'funds / monies'),
+            (45, 'חדרים', 'rooms (plural)'),
+            (46, 'רחובות', 'streets (plural)'),
+            (47, 'שירים', 'songs (plural)'),
+            (48, 'מנגינות', 'melodies (related)'),
+            (49, 'דלתות', 'doors (plural)'),
+            (50, 'חלונות', 'windows (plural)'),
         ]
         
         cursor.executemany('''
@@ -245,6 +289,27 @@ class DatabaseManager:
             (28, 7), (28, 6),  # אל - Prepositions, Biblical
             (29, 7), (29, 8),  # על - Prepositions, Common
             (30, 10), (30, 8),  # את - Grammar, Common
+            # New lemmas 31-50
+            (31, 4), (31, 2), (31, 8),  # ילד - Nouns, Basic, Common
+            (32, 4), (32, 2), (32, 8),  # אישה - Nouns, Basic, Common
+            (33, 4), (33, 2), (33, 8),  # ילדה - Nouns, Basic, Common
+            (34, 4), (34, 2),  # מורה - Nouns, Basic
+            (35, 4), (35, 2),  # תלמיד - Nouns, Basic
+            (36, 4), (36, 2), (36, 8),  # עיר - Nouns, Basic, Common
+            (37, 4), (37, 2), (37, 8),  # חבר - Nouns, Basic, Common
+            (38, 4), (38, 2), (38, 8),  # חברה - Nouns, Basic, Common
+            (39, 3), (39, 8),  # רץ - Verbs, Common
+            (40, 3), (40, 8),  # עובד - Verbs, Common
+            (41, 4), (41, 2),  # שוק - Nouns, Basic
+            (42, 4), (42, 2),  # מחשב - Nouns, Basic
+            (43, 4), (43, 2), (43, 8),  # שפה - Nouns, Basic, Common
+            (44, 4), (44, 2), (44, 8),  # כסף - Nouns, Basic, Common
+            (45, 4), (45, 2),  # חדר - Nouns, Basic
+            (46, 4), (46, 2),  # רחוב - Nouns, Basic
+            (47, 4), (47, 2),  # שיר - Nouns, Basic
+            (48, 4), (48, 2),  # מוזיקה - Nouns, Basic
+            (49, 4), (49, 2),  # דלת - Nouns, Basic
+            (50, 4), (50, 2),  # חלון - Nouns, Basic
         ]
         
         cursor.executemany('''
@@ -262,6 +327,46 @@ class DatabaseManager:
             (22, 'Arabic', 'الله (Allah)'),
             (23, 'Greek', 'κτίζω (ktizo)'),
             (23, 'Latin', 'creare'),
+            # Translations for new lemmas
+            (31, 'Arabic', 'ولد (walad)'),
+            (31, 'Yiddish', 'קינד (kind)'),
+            (32, 'Arabic', 'امرأة (imra\'a)'),
+            (32, 'Yiddish', 'פרוי (froy)'),
+            (33, 'Arabic', 'بنت (bint)'),
+            (34, 'Arabic', 'معلم (mu\'allim)'),
+            (34, 'Yiddish', 'לערער (lerer)'),
+            (35, 'Arabic', 'تلميذ (tilmīdh)'),
+            (35, 'Greek', 'μαθητής (mathētēs)'),
+            (36, 'Arabic', 'مدينة (madīna)'),
+            (36, 'Latin', 'urbs'),
+            (37, 'Arabic', 'صديق (ṣadīq)'),
+            (37, 'Spanish', 'amigo'),
+            (38, 'Arabic', 'صديقة (ṣadīqa)'),
+            (38, 'Spanish', 'amiga'),
+            (39, 'Latin', 'currere'),
+            (39, 'Greek', 'τρέχω (tréchō)'),
+            (40, 'Arabic', 'يعمل (ya\'mal)'),
+            (40, 'Latin', 'laborare'),
+            (41, 'Arabic', 'سوق (sūq)'),
+            (41, 'Persian', 'بازار (bāzār)'),
+            (42, 'English', 'computer'),
+            (42, 'Arabic', 'حاسوب (ḥāsūb)'),
+            (43, 'Arabic', 'لغة (lugha)'),
+            (43, 'Latin', 'lingua'),
+            (44, 'Arabic', 'فضة (fiḍḍa)'),
+            (44, 'Latin', 'argentum'),
+            (45, 'Arabic', 'غرفة (ghurfa)'),
+            (45, 'Latin', 'camera'),
+            (46, 'Arabic', 'شارع (shāri\')'),
+            (46, 'Latin', 'via'),
+            (47, 'Arabic', 'أغنية (ughniya)'),
+            (47, 'Greek', 'τραγούδι (tragoúdi)'),
+            (48, 'Greek', 'μουσική (mousikē)'),
+            (48, 'Arabic', 'موسيقى (mūsīqā)'),
+            (49, 'Arabic', 'باب (bāb)'),
+            (49, 'Latin', 'porta'),
+            (50, 'Arabic', 'نافذة (nāfidha)'),
+            (50, 'Latin', 'fenestra'),
         ]
         
         cursor.executemany('''
@@ -273,7 +378,7 @@ class DatabaseManager:
         today = datetime.now().date()
         progress_data = []
         
-        for lemma_id in range(1, 31):
+        for lemma_id in range(1, 51):
             # Varied familiarity levels
             if lemma_id <= 10:
                 familiarity = random.choice([3, 4])  # Good/Easy for common words
@@ -314,7 +419,7 @@ class DatabaseManager:
         ''', progress_data)
         
         self.connection.commit()
-        print(f"✓ Successfully populated database with 30 lemmas, variants, categories, and progress data")
+        print(f"✓ Successfully populated database with 50 lemmas, variants, categories, and progress data")
     
     def get_all_vocabulary(self):
         """Get all vocabulary as list of dictionaries (compatible with old format)"""

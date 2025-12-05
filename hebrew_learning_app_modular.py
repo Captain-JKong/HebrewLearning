@@ -37,10 +37,15 @@ class HebrewLearningApp:
         # Initialize session manager
         self.session = SessionManager(self.vocabulary, self.progress)
         
+        # Load settings
+        self.settings = self._load_settings()
+        
         # App state
         self.dark_mode = False
-        self.auto_play_audio = True
+        self.auto_play_audio = self.settings.get('auto_play_audio', True)
         self.answer_shown = False
+        self.show_variants = self.settings.get('show_variants', False)
+        self.show_translations = self.settings.get('show_translations', False)
         
         # UI setup
         self.theme = Themes.get_theme(self.dark_mode)
@@ -54,6 +59,34 @@ class HebrewLearningApp:
         self.create_menu()
         self.widgets = self.create_main_interface()
         self.setup_keyboard_shortcuts()
+    
+    def _load_settings(self):
+        """Load settings from JSON file"""
+        import json
+        from pathlib import Path
+        settings_file = Path.home() / '.hebrew_learning' / 'settings.json'
+        if settings_file.exists():
+            try:
+                with open(settings_file, 'r') as f:
+                    return json.load(f)
+            except:
+                pass
+        return {}
+    
+    def _save_settings(self):
+        """Save settings to JSON file"""
+        import json
+        from pathlib import Path
+        settings_dir = Path.home() / '.hebrew_learning'
+        settings_dir.mkdir(exist_ok=True)
+        settings_file = settings_dir / 'settings.json'
+        settings = {
+            'auto_play_audio': self.auto_play_audio,
+            'show_variants': self.show_variants,
+            'show_translations': self.show_translations
+        }
+        with open(settings_file, 'w') as f:
+            json.dump(settings, f, indent=2)
     
     def _set_icon(self):
         """Set application icon"""
@@ -130,16 +163,26 @@ class HebrewLearningApp:
         study_menu.add_separator()
         study_menu.add_command(label="Random 10 Words", command=self.start_random_session)
         
+        # Settings Menu
+        settings_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Settings", menu=settings_menu)
+        
+        # Create persistent checkbox variables
+        self.show_variants_var = tk.BooleanVar(value=self.show_variants)
+        self.show_translations_var = tk.BooleanVar(value=self.show_translations)
+        self.auto_play_var = tk.BooleanVar(value=self.auto_play_audio)
+        
+        settings_menu.add_checkbutton(label="Show Variants", variable=self.show_variants_var, command=self.toggle_variants)
+        settings_menu.add_checkbutton(label="Show Translations", variable=self.show_translations_var, command=self.toggle_translations)
+        settings_menu.add_separator()
+        settings_menu.add_checkbutton(label="Auto-play Audio", variable=self.auto_play_var, command=self.toggle_auto_play)
+        
         # Vocabulary Menu
         vocab_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Vocabulary", menu=vocab_menu)
         vocab_menu.add_command(label="Add New Words from File", command=self.import_vocabulary)
         vocab_menu.add_command(label="View Statistics", command=self.show_statistics)
-        vocab_menu.add_separator()
-        vocab_menu.add_command(label="Sort by Frequency", command=lambda: self.sort_vocabulary('frequency'))
-        vocab_menu.add_command(label="Sort by Confidence", command=lambda: self.sort_vocabulary('confidence'))
-        vocab_menu.add_command(label="Sort Alphabetically (Hebrew)", command=lambda: self.sort_vocabulary('hebrew'))
-        vocab_menu.add_command(label="Sort Alphabetically (English)", command=lambda: self.sort_vocabulary('english'))
+
         
         # Settings Menu
         settings_menu = tk.Menu(menubar, tearoff=0)
@@ -374,6 +417,16 @@ class HebrewLearningApp:
         self.ui_builder.update_text(self.widgets['trans_text'], word['transliteration'])
         self.ui_builder.update_text(self.widgets['english_text'], "")
         
+        # Clear extra info labels
+        if 'root_text' in self.widgets:
+            self.widgets['root_text'].config(text="")
+        if 'notes_text' in self.widgets:
+            self.widgets['notes_text'].config(text="")
+        if 'variants_text' in self.widgets:
+            self.widgets['variants_text'].config(text="")
+        if 'translations_text' in self.widgets:
+            self.widgets['translations_text'].config(text="")
+        
         # Update stats
         self.stats_label.config(text=self.session.get_progress_text())
         
@@ -390,10 +443,44 @@ class HebrewLearningApp:
         """Reveal the answer"""
         if not self.answer_shown and self.session.current_word:
             self.answer_shown = True
+            word = self.session.current_word
+            
+            # Show main English translation
             self.ui_builder.update_text(
                 self.widgets['english_text'],
-                self.session.current_word['english']
+                word['english']
             )
+            
+            # Show root if available
+            if 'root_text' in self.widgets:
+                root_value = word.get('root')
+                if root_value:
+                    self.widgets['root_text'].config(text=f"🔤 Root: {root_value}")
+                else:
+                    self.widgets['root_text'].config(text="")
+            
+            # Show notes if available
+            if 'notes_text' in self.widgets and word.get('notes'):
+                self.widgets['notes_text'].config(text=f"ℹ️  {word['notes']}")
+            
+            # Show variants if enabled
+            if self.show_variants and 'variants_text' in self.widgets and word.get('lemma_id'):
+                variants = self.vocab_manager.db.get_lemma_variants(word['lemma_id'])
+                if variants:
+                    variant_text = "📝 Variants: " + ", ".join(
+                        f"{v['form']} ({v['description']})" for v in variants
+                    )
+                    self.widgets['variants_text'].config(text=variant_text)
+            
+            # Show translations if enabled
+            if self.show_translations and 'translations_text' in self.widgets and word.get('lemma_id'):
+                translations = self.vocab_manager.db.get_lemma_translations(word['lemma_id'])
+                if translations:
+                    trans_text = "🌍 Translations: " + ", ".join(
+                        f"{t['language']}: {t['translation']}" for t in translations
+                    )
+                    self.widgets['translations_text'].config(text=trans_text)
+            
             self._show_response_buttons(self.widgets)
     
     def mark_answer(self, confidence_level):
@@ -459,7 +546,18 @@ class HebrewLearningApp:
     
     def toggle_auto_play(self):
         """Toggle auto-play audio"""
-        self.auto_play_audio = not self.auto_play_audio
+        self.auto_play_audio = self.auto_play_var.get()
+        self._save_settings()
+    
+    def toggle_variants(self):
+        """Toggle showing word variants"""
+        self.show_variants = self.show_variants_var.get()
+        self._save_settings()
+    
+    def toggle_translations(self):
+        """Toggle showing translations"""
+        self.show_translations = self.show_translations_var.get()
+        self._save_settings()
     
     def reset_progress(self):
         """Reset all progress"""
@@ -528,30 +626,7 @@ class HebrewLearningApp:
         except Exception as e:
             messagebox.showerror("Import Error", f"Failed to import vocabulary:\\n{str(e)}")
     
-    def sort_vocabulary(self, sort_by):
-        """Sort vocabulary"""
-        if sort_by == 'frequency':
-            self.vocabulary = self.vocab_manager.sort_by_frequency(self.vocabulary)
-            message = "Sorted by frequency (rank order)"
-        elif sort_by == 'confidence':
-            confidence_scores = self.progress.get('confidence_scores', {})
-            self.vocabulary = self.vocab_manager.sort_by_confidence(self.vocabulary, confidence_scores)
-            message = "Sorted by confidence (highest confidence first)"
-        elif sort_by == 'hebrew':
-            self.vocabulary = self.vocab_manager.sort_by_hebrew(self.vocabulary)
-            message = "Sorted alphabetically by Hebrew"
-        elif sort_by == 'english':
-            self.vocabulary = self.vocab_manager.sort_by_english(self.vocabulary)
-            message = "Sorted alphabetically by English"
-        
-        # Re-assign ranks
-        for i, word in enumerate(self.vocabulary, 1):
-            word['rank'] = i
-        
-        self.vocab_manager.save(self.vocabulary, self.paths['csv'])
-        self.session.vocabulary = self.vocabulary
-        
-        messagebox.showinfo("Vocabulary Sorted", message)
+
     
     def setup_keyboard_shortcuts(self):
         """Setup keyboard shortcuts"""

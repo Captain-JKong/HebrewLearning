@@ -38,43 +38,10 @@ class VocabularyManager:
             raise Exception(f"Error loading vocabulary from database: {e}")
     
     def save(self, vocabulary, csv_file):
-        """Save vocabulary list to CSV file"""
-        # If running from PyInstaller bundle, save to user's home directory
-        if getattr(sys, 'frozen', False):
-            save_path = Path.home() / '.hebrew_learning' / 'hebrew_vocabulary.csv'
-            save_path.parent.mkdir(exist_ok=True)
-        else:
-            save_path = csv_file
-        
-        try:
-            with open(save_path, 'w', encoding='utf-8', newline='') as f:
-                writer = csv.DictWriter(f, fieldnames=['rank', 'english', 'transliteration', 'hebrew'])
-                writer.writeheader()
-                writer.writerows(vocabulary)
-            print(f"✓ Saved {len(vocabulary)} words to {save_path}")
-        except Exception as e:
-            print(f"Error saving vocabulary: {e}")
-    
-    def sort_by_frequency(self, vocabulary):
-        """Sort by rank (frequency)"""
-        vocabulary.sort(key=lambda x: x['rank'])
-        return vocabulary
-    
-    def sort_by_confidence(self, vocabulary, confidence_scores=None):
-        """Sort by familiarity level (descending)"""
-        # Use familiarity from database if available
-        vocabulary.sort(key=lambda x: x.get('familiarity', 0) or 0, reverse=True)
-        return vocabulary
-    
-    def sort_by_hebrew(self, vocabulary):
-        """Sort alphabetically by Hebrew"""
-        vocabulary.sort(key=lambda x: x['hebrew'])
-        return vocabulary
-    
-    def sort_by_english(self, vocabulary):
-        """Sort alphabetically by English"""
-        vocabulary.sort(key=lambda x: x['english'].lower())
-        return vocabulary
+        """Save vocabulary list to CSV file (legacy backup only - main data is in SQLite)"""
+        # Skip CSV save since SQLite is the primary data store
+        # CSV export can be added as a separate feature if needed
+        pass
 
 class ProgressManager:
     """Manages learning progress data - now uses SQLite database"""
@@ -148,10 +115,24 @@ class ProgressManager:
             easiness = self.db.update_progress(lemma_id, familiarity)
             
             # Also update legacy progress structure for compatibility
+            # Convert word_key to string for consistency in progress tracking
+            word_key_str = str(word_key)
             for category in ['easy', 'good', 'hard', 'again']:
-                if word_key in progress.get(category, []):
-                    progress[category].remove(word_key)
-            progress.setdefault(confidence_level, []).append(word_key)
+                # Ensure we always get a list, not None or other type
+                category_value = progress.get(category, [])
+                if not isinstance(category_value, list):
+                    category_value = []
+                    progress[category] = category_value
+                
+                # Remove any existing entry (convert all to strings for comparison)
+                progress[category] = [item for item in category_value if str(item) != word_key_str]
+            
+            # Add to new category
+            if confidence_level not in progress:
+                progress[confidence_level] = []
+            if not isinstance(progress[confidence_level], list):
+                progress[confidence_level] = []
+            progress[confidence_level].append(word_key_str)
             
             return easiness
         except Exception as e:
