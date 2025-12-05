@@ -17,19 +17,29 @@ class UIConfig:
     """All UI layout parameters - modify these to adjust the interface"""
     
     # ===== LAYOUT SPACING =====
-    WINDOW_TOP_PADDING = 15          # Space at top of window (reduced from 20)
+    WINDOW_TOP_PADDING = 15          # Space at top of window
     WINDOW_SIDE_PADDING = 40         # Space on sides of window
-    CARD_FRAME_PADY = 15             # Vertical padding around main card (reduced from 20)
+    CARD_FRAME_PADY = 15             # Vertical padding around main card
     CARD_FRAME_PADX = 40             # Horizontal padding around main card
     
+    # ===== DIALOGS =====
+    CUSTOM_RANGE_DIALOG_GEOMETRY = "300x150"  # Custom range dialog size
+    
     # ===== TEXT BOXES =====
-    TEXT_BOX_VERTICAL_SPACING = 3    # Space between text boxes (pady) - reduced from 4
+    TEXT_BOX_VERTICAL_SPACING = 3    # Space between text boxes (pady)
     TEXT_BOX_HORIZONTAL_PADDING = 12 # Side padding for text boxes (padx)
     TEXT_BOX_BORDER_RADIUS = 12      # Corner roundness of text boxes
-    TEXT_BOX_INNER_PADX = 10         # Text padding inside box (horizontal) - reduced from 15
-    TEXT_BOX_INNER_PADY = 5          # Text padding inside box (vertical) - increased to 5 for better spacing
+    TEXT_BOX_INNER_PADX = 10         # Text padding inside box (horizontal)
+    TEXT_BOX_INNER_PADY = 5          # Text padding inside box (vertical)
     TEXT_BOX_HEIGHT = 1              # Line height for text boxes
-    TEXT_BOX_REL_HEIGHT = 0.3        # Relative height (0.0-1.0) for single-line boxes (DEPRECATED - no longer used)
+    TEXT_BOX_CONTAINER_HEIGHT_SINGLE = 60  # Fixed height for single-line boxes (Hebrew)
+    TEXT_BOX_CONTAINER_HEIGHT_MULTI = 85   # Fixed height for multi-line boxes
+    TEXT_BOX_INNER_REL_WIDTH = 0.96  # Relative width of text inside container
+    TEXT_BOX_INNER_REL_HEIGHT = 0.85 # Relative height of text inside container
+    INFO_BOX_HEIGHT = 100            # Fixed height for info box
+    INFO_BOX_PADDING = 5             # Padding inside info box
+    INFO_BOX_LABEL_PADY = 2          # Vertical padding for info labels
+    INFO_BOX_WRAP_LENGTH = 600       # Text wrap length for info labels
     
     # ===== FONTS =====
     # Hebrew text
@@ -259,30 +269,18 @@ class UIBuilder:
     
     def create_text_widget(self, parent, height, font, bg, fg):
         """Create a text display widget with rounded corners"""
-        # Calculate fixed height for the container
-        # Hebrew needs more height (60px) due to large font, others need less (48px)
-        if height == 1:
-            container_height = 60  # Fixed height for single line boxes (increased for Hebrew)
-        else:
-            container_height = 85  # Fixed height for multi-line boxes
+        container_height = UIConfig.TEXT_BOX_CONTAINER_HEIGHT_SINGLE if height == 1 else UIConfig.TEXT_BOX_CONTAINER_HEIGHT_MULTI
         
-        # Create rounded container with FIXED height
-        rounded_container = self._create_rounded_frame(
-            parent, 
-            bg, 
-            radius=UIConfig.TEXT_BOX_BORDER_RADIUS
-        )
+        rounded_container = self._create_rounded_frame(parent, bg, radius=UIConfig.TEXT_BOX_BORDER_RADIUS)
         rounded_container.pack(
             fill=tk.X, 
             expand=False, 
             pady=UIConfig.TEXT_BOX_VERTICAL_SPACING, 
             padx=UIConfig.TEXT_BOX_HORIZONTAL_PADDING
         )
-        # CRITICAL: Set fixed height on the container to prevent expansion
         rounded_container.config(height=container_height)
-        rounded_container.pack_propagate(False)  # Prevent children from resizing container
+        rounded_container.pack_propagate(False)
         
-        # Create text widget inside the rounded container
         text_widget = tk.Text(
             rounded_container,
             height=height,
@@ -296,10 +294,12 @@ class UIBuilder:
             padx=UIConfig.TEXT_BOX_INNER_PADX,
             pady=UIConfig.TEXT_BOX_INNER_PADY
         )
-        # Place text widget to fill the container
-        text_widget.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=0.96, relheight=0.85)
+        text_widget.place(
+            relx=0.5, rely=0.5, anchor=tk.CENTER,
+            relwidth=UIConfig.TEXT_BOX_INNER_REL_WIDTH,
+            relheight=UIConfig.TEXT_BOX_INNER_REL_HEIGHT
+        )
         
-        # Store the container and background color for theme updates
         text_widget._rounded_container = rounded_container
         text_widget._rounded_bg = bg
         return text_widget
@@ -537,7 +537,6 @@ class UIBuilder:
         )
         
         # ===== EXTRA INFO BOX (ROOT, NOTES, VARIANTS, TRANSLATIONS) =====
-        # Create a fourth rounded box to contain all extra info
         info_container = self._create_rounded_frame(
             widgets['card_frame'],
             self.theme['info_bg'],
@@ -549,63 +548,41 @@ class UIBuilder:
             pady=UIConfig.TEXT_BOX_VERTICAL_SPACING,
             padx=UIConfig.TEXT_BOX_HORIZONTAL_PADDING
         )
-        info_container.config(height=100)
+        info_container.config(height=UIConfig.INFO_BOX_HEIGHT)
         info_container.pack_propagate(False)
         
-        # Create inner frame for info labels
         info_inner = tk.Frame(info_container, bg=self.theme['info_bg'])
-        info_inner.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=0.96, relheight=0.85)
-        
-        # Root label - larger font
-        widgets['root_text'] = self.create_label(
-            info_inner,
-            text="",
-            font=(UIConfig.TRANS_FONT_FAMILY, 12, 'normal'),
-            bg=self.theme['info_bg'],
-            fg=self.theme['info_fg'],
-            anchor='w',
-            justify=tk.LEFT
+        info_inner.place(
+            relx=0.5, rely=0.5, anchor=tk.CENTER,
+            relwidth=UIConfig.TEXT_BOX_INNER_REL_WIDTH,
+            relheight=UIConfig.TEXT_BOX_INNER_REL_HEIGHT
         )
-        widgets['root_text'].pack(fill=tk.X, padx=5, pady=2, anchor='w')
         
-        # Notes label - larger font
-        widgets['notes_text'] = self.create_label(
-            info_inner,
-            text="",
-            font=(UIConfig.TRANS_FONT_FAMILY, 12, 'italic'),
-            bg=self.theme['info_bg'],
-            fg=self.theme['info_fg'],
-            anchor='w',
-            justify=tk.LEFT,
-            wraplength=600
-        )
-        widgets['notes_text'].pack(fill=tk.X, padx=5, pady=2, anchor='w')
+        # Create info labels with consistent configuration
+        info_labels = [
+            ('root_text', 'normal'),
+            ('notes_text', 'italic'),
+            ('variants_text', 'normal'),
+            ('translations_text', 'normal')
+        ]
         
-        # Variants label - larger font
-        widgets['variants_text'] = self.create_label(
-            info_inner,
-            text="",
-            font=(UIConfig.TRANS_FONT_FAMILY, 12, 'normal'),
-            bg=self.theme['info_bg'],
-            fg=self.theme['info_fg'],
-            anchor='w',
-            justify=tk.LEFT,
-            wraplength=600
-        )
-        widgets['variants_text'].pack(fill=tk.X, padx=5, pady=2, anchor='w')
-        
-        # Translations label - larger font
-        widgets['translations_text'] = self.create_label(
-            info_inner,
-            text="",
-            font=(UIConfig.TRANS_FONT_FAMILY, 12, 'normal'),
-            bg=self.theme['info_bg'],
-            fg=self.theme['info_fg'],
-            anchor='w',
-            justify=tk.LEFT,
-            wraplength=600
-        )
-        widgets['translations_text'].pack(fill=tk.X, padx=5, pady=2, anchor='w')
+        for label_name, weight in info_labels:
+            widgets[label_name] = self.create_label(
+                info_inner,
+                text="",
+                font=(UIConfig.TRANS_FONT_FAMILY, 12, weight),
+                bg=self.theme['info_bg'],
+                fg=self.theme['info_fg'],
+                anchor='w',
+                justify=tk.LEFT,
+                wraplength=UIConfig.INFO_BOX_WRAP_LENGTH
+            )
+            widgets[label_name].pack(
+                fill=tk.X,
+                padx=UIConfig.INFO_BOX_PADDING,
+                pady=UIConfig.INFO_BOX_LABEL_PADY,
+                anchor='w'
+            )
         
         # Store info container for theme updates
         widgets['info_container'] = info_container
@@ -849,7 +826,7 @@ class DialogHelper:
         """Show dialog for custom rank range selection"""
         dialog = tk.Toplevel(root)
         dialog.title("Custom Range")
-        dialog.geometry("300x150")
+        dialog.geometry(UIConfig.CUSTOM_RANGE_DIALOG_GEOMETRY)
         dialog.transient(root)
         dialog.grab_set()
         

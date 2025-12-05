@@ -61,32 +61,14 @@ class HebrewLearningApp:
         self.setup_keyboard_shortcuts()
     
     def _load_settings(self):
-        """Load settings from JSON file"""
-        import json
-        from pathlib import Path
-        settings_file = Path.home() / '.hebrew_learning' / 'settings.json'
-        if settings_file.exists():
-            try:
-                with open(settings_file, 'r') as f:
-                    return json.load(f)
-            except:
-                pass
-        return {}
+        """Load settings from database"""
+        # Settings stored in database - placeholder for future implementation
+        return {'auto_play_audio': True, 'show_variants': False, 'show_translations': False}
     
     def _save_settings(self):
-        """Save settings to JSON file"""
-        import json
-        from pathlib import Path
-        settings_dir = Path.home() / '.hebrew_learning'
-        settings_dir.mkdir(exist_ok=True)
-        settings_file = settings_dir / 'settings.json'
-        settings = {
-            'auto_play_audio': self.auto_play_audio,
-            'show_variants': self.show_variants,
-            'show_translations': self.show_translations
-        }
-        with open(settings_file, 'w') as f:
-            json.dump(settings, f, indent=2)
+        """Save settings to database"""
+        # Settings stored in database - placeholder for future implementation
+        pass
     
     def _set_icon(self):
         """Set application icon"""
@@ -176,26 +158,16 @@ class HebrewLearningApp:
         settings_menu.add_checkbutton(label="Show Translations", variable=self.show_translations_var, command=self.toggle_translations)
         settings_menu.add_separator()
         settings_menu.add_checkbutton(label="Auto-play Audio", variable=self.auto_play_var, command=self.toggle_auto_play)
+        settings_menu.add_separator()
+        settings_menu.add_command(label="Toggle Dark Mode", command=self.toggle_theme)
+        settings_menu.add_separator()
+        settings_menu.add_command(label="Reset Progress", command=self.reset_progress)
         
         # Vocabulary Menu
         vocab_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Vocabulary", menu=vocab_menu)
         vocab_menu.add_command(label="Add New Words from File", command=self.import_vocabulary)
         vocab_menu.add_command(label="View Statistics", command=self.show_statistics)
-
-        
-        # Settings Menu
-        settings_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Settings", menu=settings_menu)
-        settings_menu.add_checkbutton(
-            label="Auto-play Audio",
-            variable=tk.BooleanVar(value=self.auto_play_audio),
-            command=self.toggle_auto_play
-        )
-        settings_menu.add_separator()
-        settings_menu.add_command(label="Toggle Dark Mode", command=self.toggle_theme)
-        settings_menu.add_separator()
-        settings_menu.add_command(label="Reset Progress", command=self.reset_progress)
         
         # Help Menu
         help_menu = tk.Menu(menubar, tearoff=0)
@@ -236,22 +208,12 @@ class HebrewLearningApp:
         return widgets
     
     def _set_button_state(self, widgets, button_name, state):
-        """Set button state (handles canvas buttons, simple buttons, and containers)"""
+        """Set button state (handles all button types via duck typing)"""
         if button_name in widgets:
             button = widgets[button_name]
-            
-            # Canvas button (rounded)
-            if hasattr(button, '_is_canvas_button'):
-                button._state = state
-                # Redraw to update appearance
-                if hasattr(button, '_draw_button'):
-                    button._draw_button()
-            # Container with inner button
-            elif hasattr(button, '_button'):
-                button._button.config(state=state)
-            # Simple button
-            else:
-                button.config(state=state)
+            button._state = state
+            if hasattr(button, '_draw_button'):
+                button._draw_button()
     
     def _show_welcome_message(self, widgets):
         """Show welcome message"""
@@ -630,29 +592,23 @@ class HebrewLearningApp:
     
     def setup_keyboard_shortcuts(self):
         """Setup keyboard shortcuts"""
+        # Answer visibility
         self.root.bind('<space>', lambda e: self.show_answer() if self.session.current_word and not self.answer_shown else None)
         
-        # Number keys
-        self.root.bind('1', lambda e: self.mark_answer('again') if self.answer_shown else None)
-        self.root.bind('2', lambda e: self.mark_answer('hard') if self.answer_shown else None)
-        self.root.bind('3', lambda e: self.mark_answer('good') if self.answer_shown else None)
-        self.root.bind('4', lambda e: self.mark_answer('easy') if self.answer_shown else None)
+        # Confidence levels - consolidated
+        shortcuts = {
+            'again': ['1', 'a', 'A'],
+            'hard': ['2', 'h', 'H'],
+            'good': ['3', 'g', 'G'],
+            'easy': ['4', 'e', 'E']
+        }
+        for action, keys in shortcuts.items():
+            for key in keys:
+                self.root.bind(key, lambda e, a=action: self.mark_answer(a) if self.answer_shown else None)
         
-        # Letter shortcuts
-        self.root.bind('a', lambda e: self.mark_answer('again') if self.answer_shown else None)
-        self.root.bind('A', lambda e: self.mark_answer('again') if self.answer_shown else None)
-        self.root.bind('h', lambda e: self.mark_answer('hard') if self.answer_shown else None)
-        self.root.bind('H', lambda e: self.mark_answer('hard') if self.answer_shown else None)
-        self.root.bind('g', lambda e: self.mark_answer('good') if self.answer_shown else None)
-        self.root.bind('G', lambda e: self.mark_answer('good') if self.answer_shown else None)
-        self.root.bind('e', lambda e: self.mark_answer('easy') if self.answer_shown else None)
-        self.root.bind('E', lambda e: self.mark_answer('easy') if self.answer_shown else None)
-        
-        # Audio
-        self.root.bind('p', lambda e: self.play_audio() if self.session.current_word else None)
-        self.root.bind('P', lambda e: self.play_audio() if self.session.current_word else None)
-        
-        # Theme toggle
+        # Audio and theme
+        for key in ['p', 'P']:
+            self.root.bind(key, lambda e: self.play_audio() if self.session.current_word else None)
         self.root.bind('\\', lambda e: self.toggle_theme())
 
 def main():

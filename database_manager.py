@@ -472,33 +472,25 @@ class DatabaseManager:
     
     def get_lemma_variants(self, lemma_id):
         """Get all variants for a lemma"""
-        cursor = self.connection.cursor()
-        cursor.execute('''
-            SELECT form, description
-            FROM variants
-            WHERE lemma_id = ?
-        ''', (lemma_id,))
-        return [dict(row) for row in cursor.fetchall()]
+        return self._query_lemma_data('SELECT form, description FROM variants WHERE lemma_id = ?', lemma_id)
     
     def get_lemma_categories(self, lemma_id):
         """Get all categories for a lemma"""
-        cursor = self.connection.cursor()
-        cursor.execute('''
-            SELECT c.name
-            FROM categories c
+        rows = self._query_lemma_data('''
+            SELECT c.name FROM categories c
             JOIN lemma_categories lc ON c.category_id = lc.category_id
             WHERE lc.lemma_id = ?
-        ''', (lemma_id,))
-        return [row['name'] for row in cursor.fetchall()]
+        ''', lemma_id)
+        return [row['name'] for row in rows]
     
     def get_lemma_translations(self, lemma_id):
         """Get all translations for a lemma"""
+        return self._query_lemma_data('SELECT language, translation FROM translations WHERE lemma_id = ?', lemma_id)
+    
+    def _query_lemma_data(self, query, lemma_id):
+        """Generic query method for lemma-related data"""
         cursor = self.connection.cursor()
-        cursor.execute('''
-            SELECT language, translation
-            FROM translations
-            WHERE lemma_id = ?
-        ''', (lemma_id,))
+        cursor.execute(query, (lemma_id,))
         return [dict(row) for row in cursor.fetchall()]
     
     def update_progress(self, lemma_id, familiarity, easiness=None, interval=None):
