@@ -11,7 +11,6 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('hebrew_vocabulary.csv', '.'),
         ('HebrewLearning.icns', '.'),
     ],
     hiddenimports=[
