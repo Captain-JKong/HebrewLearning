@@ -36,7 +36,7 @@ class UIConfig:
     TEXT_BOX_CONTAINER_HEIGHT_MULTI = 85   # Fixed height for multi-line boxes
     TEXT_BOX_INNER_REL_WIDTH = 0.96  # Relative width of text inside container
     TEXT_BOX_INNER_REL_HEIGHT = 0.85 # Relative height of text inside container
-    INFO_BOX_HEIGHT = 100            # Fixed height for info box
+    INFO_BOX_HEIGHT = 120            # Fixed height for info box
     INFO_BOX_PADDING = 5             # Padding inside info box
     INFO_BOX_LABEL_PADY = 2          # Vertical padding for info labels
     INFO_BOX_WRAP_LENGTH = 600       # Text wrap length for info labels
@@ -886,21 +886,21 @@ class DialogHelper:
         confidence = progress.get('confidence_scores', {})
         if confidence:
             top_confidence = sorted(confidence.items(), key=lambda x: x[1], reverse=True)[:5]
-            confidence_text = "\\n\\nHighest Confidence Words:\\n"
+            confidence_text = "\n\nHighest Confidence Words:\n"
             for word_key, score in top_confidence:
                 hebrew = word_key.split('_', 1)[1] if '_' in word_key else word_key
-                confidence_text += f"  {hebrew}: {score:.2f}/4.0\\n"
+                confidence_text += f"  {hebrew}: {score:.2f}/4.0\n"
         else:
             confidence_text = ""
         
         messagebox.showinfo(
             "Vocabulary Statistics",
-            f"Total Words: {vocabulary_count}\\n\\n"
-            f"Confidence Levels:\\n"
-            f"  Easy (Mastered): {easy} ({easy/vocabulary_count*100:.1f}%)\\n"
-            f"  Good (Confident): {good} ({good/vocabulary_count*100:.1f}%)\\n"
-            f"  Hard (Struggling): {hard} ({hard/vocabulary_count*100:.1f}%)\\n"
-            f"  Again (Need Review): {again} ({again/vocabulary_count*100:.1f}%)\\n\\n"
+            f"Total Words: {vocabulary_count}\n\n"
+            f"Confidence Levels:\n"
+            f"  Easy (Mastered): {easy} ({easy/vocabulary_count*100:.1f}%)\n"
+            f"  Good (Confident): {good} ({good/vocabulary_count*100:.1f}%)\n"
+            f"  Hard (Struggling): {hard} ({hard/vocabulary_count*100:.1f}%)\n"
+            f"  Again (Need Review): {again} ({again/vocabulary_count*100:.1f}%)\n\n"
             f"Not Studied Yet: {not_studied} ({not_studied/vocabulary_count*100:.1f}%)"
             f"{confidence_text}"
         )

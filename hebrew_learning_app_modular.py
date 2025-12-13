@@ -5,7 +5,7 @@ Modular version with separated concerns
 """
 
 import tkinter as tk
-from tkinter import messagebox, filedialog
+from tkinter import messagebox
 import random
 
 from config import Config
@@ -175,7 +175,6 @@ class HebrewLearningApp:
         # Vocabulary Menu
         vocab_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Vocabulary", menu=vocab_menu)
-        vocab_menu.add_command(label="Add New Words from File", command=self.import_vocabulary)
         vocab_menu.add_command(label="View Statistics", command=self.show_statistics)
         
         # Help Menu
@@ -548,57 +547,7 @@ class HebrewLearningApp:
     def show_statistics(self):
         """Show statistics dialog"""
         DialogHelper.show_statistics(len(self.vocabulary), self.progress)
-    
-    def import_vocabulary(self):
-        """Import vocabulary from file"""
-        filepath = filedialog.askopenfilename(
-            title="Select vocabulary file",
-            filetypes=[("Text files", "*.txt"), ("Python files", "*.py"), ("All files", "*.*")]
-        )
-        
-        if not filepath:
-            return
-        
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                content = f.read()
-            
-            new_words = []
-            for line in content.strip().split('\n'):
-                if not line.strip() or line.startswith('#'):
-                    continue
-                
-                parts = line.strip().split('\t')
-                if len(parts) >= 4:
-                    rank, english, trans, hebrew = parts[0], parts[1], parts[2], parts[3]
-                    new_words.append({
-                        'rank': int(rank) if rank.isdigit() else len(self.vocabulary) + len(new_words) + 1,
-                        'english': english,
-                        'transliteration': trans,
-                        'hebrew': hebrew
-                    })
-            
-            if new_words:
-                self.vocabulary.extend(new_words)
-                self.vocab_manager.save(self.vocabulary, self.paths['csv'])
-                self.session.vocabulary = self.vocabulary
-                
-                messagebox.showinfo(
-                    "Import Complete",
-                    f"Successfully imported {len(new_words)} new words!\n"
-                    f"Total vocabulary: {len(self.vocabulary)} words"
-                )
-            else:
-                messagebox.showwarning(
-                    "No Words Found",
-                    "Could not find any valid vocabulary entries in the file."
-                )
-        
-        except Exception as e:
-            messagebox.showerror("Import Error", f"Failed to import vocabulary:\n{str(e)}")
-    
 
-    
     def setup_keyboard_shortcuts(self):
         """Setup keyboard shortcuts"""
         # Answer visibility
