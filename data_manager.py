@@ -6,12 +6,17 @@ Handles vocabulary and progress data using SQLite database
 from pathlib import Path
 from database_manager import DatabaseManager
 
+
+def get_database_path(file_path):
+    """Get database path from any related file path"""
+    return Path(file_path).parent / 'hebrew_vocabulary.db'
+
+
 class VocabularyManager:
     """Manages vocabulary data using SQLite database"""
     
-    def __init__(self, vocab_file):
-        db_path = Path(vocab_file).parent / 'hebrew_vocabulary.db'
-        self.db = DatabaseManager(db_path)
+    def __init__(self, db):
+        self.db = db
         self.vocabulary = []
     
     def load(self):
@@ -24,12 +29,12 @@ class VocabularyManager:
         print(f"✓ Loaded {len(self.vocabulary)} vocabulary entries from database")
         return self.vocabulary
 
+
 class ProgressManager:
     """Manages learning progress data using SQLite database"""
     
-    def __init__(self, progress_file):
-        db_path = Path(progress_file).parent / 'hebrew_vocabulary.db'
-        self.db = DatabaseManager(db_path)
+    def __init__(self, db):
+        self.db = db
     
     def load(self):
         """Load progress stats from database"""
@@ -38,6 +43,10 @@ class ProgressManager:
     def save(self, progress):
         """Save progress - no-op since database auto-commits"""
         pass
+    
+    def _create_empty_progress(self):
+        """Create empty progress structure"""
+        return {'easy': 0, 'good': 0, 'hard': 0, 'again': 0, 'not_studied': 0}
     
     def mark_word(self, progress, word_key, confidence_level):
         """Mark a word with confidence level in database"""
@@ -49,10 +58,9 @@ class ProgressManager:
             if isinstance(word_key, int):
                 lemma_id = word_key
             elif '_' in str(word_key):
+                # Old format: "rank_hebrew" - extract rank and lookup
                 rank = int(str(word_key).split('_')[0])
-                vocab = self.db.get_all_vocabulary()
-                matching = [v for v in vocab if v.get('rank') == rank]
-                lemma_id = matching[0]['lemma_id'] if matching else None
+                lemma_id = self.db.get_lemma_id_by_rank(rank)
             else:
                 lemma_id = int(word_key)
             

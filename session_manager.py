@@ -10,9 +10,10 @@ from datetime import datetime, date
 class SessionManager:
     """Manages learning sessions with multiple study modes"""
     
-    def __init__(self, vocabulary, progress):
+    def __init__(self, vocabulary, progress, db=None):
         self.vocabulary = vocabulary
         self.progress = progress
+        self.db = db  # Shared database connection
         self.current_words = []
         self.current_index = 0
         self.current_word = None
@@ -67,10 +68,9 @@ class SessionManager:
     
     def start_category_session(self, category_name):
         """Study by Category: Verbs, Nouns, Biblical, etc."""
-        from database_manager import DatabaseManager
-        from pathlib import Path
-        db = DatabaseManager(Path(__file__).parent / 'hebrew_vocabulary.db')
-        cursor = db.connection.cursor()
+        if not self.db:
+            return 0
+        cursor = self.db.connection.cursor()
         cursor.execute('''
             SELECT l.lemma_id FROM lemmas l
             JOIN lemma_categories lc ON l.lemma_id = lc.lemma_id

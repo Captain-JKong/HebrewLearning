@@ -95,6 +95,14 @@ class DatabaseManager:
             )
         ''')
         
+        # Table 7: User Settings
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            )
+        ''')
+        
         self.connection.commit()
     
     def populate_sample_data(self):
@@ -570,6 +578,37 @@ class DatabaseManager:
         ''')
         
         return dict(cursor.fetchone())
+    
+    def get_setting(self, key, default=None):
+        """Get a setting value from database"""
+        cursor = self.connection.cursor()
+        cursor.execute('SELECT value FROM user_settings WHERE key = ?', (key,))
+        row = cursor.fetchone()
+        if row:
+            value = row['value']
+            # Convert string booleans back to bool
+            if value == 'True':
+                return True
+            elif value == 'False':
+                return False
+            return value
+        return default
+    
+    def save_setting(self, key, value):
+        """Save a setting value to database"""
+        cursor = self.connection.cursor()
+        cursor.execute('''
+            INSERT INTO user_settings (key, value) VALUES (?, ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value
+        ''', (key, str(value)))
+        self.connection.commit()
+    
+    def get_lemma_id_by_rank(self, rank):
+        """Get lemma_id by frequency rank - efficient single lookup"""
+        cursor = self.connection.cursor()
+        cursor.execute('SELECT lemma_id FROM lemmas WHERE frequency_rank = ?', (rank,))
+        row = cursor.fetchone()
+        return row['lemma_id'] if row else None
     
     def close(self):
         """Close database connection"""

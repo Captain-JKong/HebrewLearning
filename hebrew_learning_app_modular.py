@@ -9,7 +9,8 @@ from tkinter import messagebox, filedialog
 import random
 
 from config import Config
-from data_manager import VocabularyManager, ProgressManager
+from database_manager import DatabaseManager
+from data_manager import VocabularyManager, ProgressManager, get_database_path
 from audio_player import AudioPlayer
 from session_manager import SessionManager
 from ui_components import UIBuilder, DialogHelper, Themes
@@ -25,19 +26,23 @@ class HebrewLearningApp:
         # Initialize paths
         self.paths = Config.get_paths()
         
-        # Initialize managers
-        self.vocab_manager = VocabularyManager(self.paths['vocab'])
-        self.progress_manager = ProgressManager(self.paths['progress'])
+        # Create shared database connection
+        db_path = get_database_path(self.paths['vocab'])
+        self.db = DatabaseManager(db_path)
+        
+        # Initialize managers with shared database
+        self.vocab_manager = VocabularyManager(self.db)
+        self.progress_manager = ProgressManager(self.db)
         self.audio_player = AudioPlayer()
         
         # Load data
         self.vocabulary = self.vocab_manager.load()
         self.progress = self.progress_manager.load()
         
-        # Initialize session manager
-        self.session = SessionManager(self.vocabulary, self.progress)
+        # Initialize session manager with shared database
+        self.session = SessionManager(self.vocabulary, self.progress, self.db)
         
-        # Load settings
+        # Load settings from database
         self.settings = self._load_settings()
         
         # App state
@@ -62,13 +67,17 @@ class HebrewLearningApp:
     
     def _load_settings(self):
         """Load settings from database"""
-        # Settings stored in database - placeholder for future implementation
-        return {'auto_play_audio': True, 'show_variants': False, 'show_translations': False}
+        return {
+            'auto_play_audio': self.db.get_setting('auto_play_audio', True),
+            'show_variants': self.db.get_setting('show_variants', False),
+            'show_translations': self.db.get_setting('show_translations', False)
+        }
     
     def _save_settings(self):
         """Save settings to database"""
-        # Settings stored in database - placeholder for future implementation
-        pass
+        self.db.save_setting('auto_play_audio', self.auto_play_audio)
+        self.db.save_setting('show_variants', self.show_variants)
+        self.db.save_setting('show_translations', self.show_translations)
     
     def _set_icon(self):
         """Set application icon"""
@@ -76,7 +85,7 @@ class HebrewLearningApp:
             try:
                 icon_img = tk.PhotoImage(file=str(self.paths['icon']))
                 self.root.iconphoto(True, icon_img)
-            except:
+            except tk.TclError:
                 pass
     
     def create_menu(self):
@@ -525,7 +534,7 @@ class HebrewLearningApp:
         """Reset all progress"""
         if messagebox.askyesno(
             "Reset Progress",
-            "Are you sure you want to reset all progress?\\nThis cannot be undone."
+            "Are you sure you want to reset all progress?\nThis cannot be undone."
         ):
             self.progress = self.progress_manager._create_empty_progress()
             self.progress_manager.save(self.progress)
@@ -555,11 +564,11 @@ class HebrewLearningApp:
                 content = f.read()
             
             new_words = []
-            for line in content.strip().split('\\n'):
+            for line in content.strip().split('\n'):
                 if not line.strip() or line.startswith('#'):
                     continue
                 
-                parts = line.strip().split('\\t')
+                parts = line.strip().split('\t')
                 if len(parts) >= 4:
                     rank, english, trans, hebrew = parts[0], parts[1], parts[2], parts[3]
                     new_words.append({
@@ -576,7 +585,7 @@ class HebrewLearningApp:
                 
                 messagebox.showinfo(
                     "Import Complete",
-                    f"Successfully imported {len(new_words)} new words!\\n"
+                    f"Successfully imported {len(new_words)} new words!\n"
                     f"Total vocabulary: {len(self.vocabulary)} words"
                 )
             else:
@@ -586,7 +595,7 @@ class HebrewLearningApp:
                 )
         
         except Exception as e:
-            messagebox.showerror("Import Error", f"Failed to import vocabulary:\\n{str(e)}")
+            messagebox.showerror("Import Error", f"Failed to import vocabulary:\n{str(e)}")
     
 
     
@@ -610,10 +619,17 @@ class HebrewLearningApp:
         for key in ['p', 'P']:
             self.root.bind(key, lambda e: self.play_audio() if self.session.current_word else None)
         self.root.bind('\\', lambda e: self.toggle_theme())
+    
+    def on_closing(self):
+        """Handle app closing - cleanup database connection"""
+        self._save_settings()
+        self.db.close()
+        self.root.destroy()
 
 def main():
     root = tk.Tk()
     app = HebrewLearningApp(root)
+    root.protocol("WM_DELETE_WINDOW", app.on_closing)
     root.mainloop()
 
 if __name__ == '__main__':
