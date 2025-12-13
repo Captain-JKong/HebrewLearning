@@ -1,11 +1,11 @@
-#!/usr/bin/env pythonw
+#!/usr/bin/env python
 """
 Hebrew Learning App - Main Application
 Modular version with separated concerns
+Rewritten for Flet
 """
 
-import tkinter as tk
-from tkinter import messagebox
+import flet as ft
 import random
 
 from config import Config
@@ -18,10 +18,12 @@ from ui_components import UIBuilder, DialogHelper, Themes
 class HebrewLearningApp:
     """Main application class"""
     
-    def __init__(self, root):
-        self.root = root
-        self.root.title(Config.APP_NAME)
-        self.root.geometry(f"{Config.WINDOW_WIDTH}x{Config.WINDOW_HEIGHT}")
+    def __init__(self, page: ft.Page):
+        self.page = page
+        self.page.title = Config.APP_NAME
+        self.page.window_width = Config.WINDOW_WIDTH
+        self.page.window_height = Config.WINDOW_HEIGHT
+        self.page.theme_mode = ft.ThemeMode.LIGHT
         
         # Initialize paths
         self.paths = Config.get_paths()
@@ -54,15 +56,19 @@ class HebrewLearningApp:
         
         # UI setup
         self.theme = Themes.get_theme(self.dark_mode)
-        self.root.configure(bg=self.theme['bg'])
-        self.ui_builder = UIBuilder(self.root, self.theme)
+        self.page.bgcolor = self.theme['bg']
+        self.ui_builder = UIBuilder(self.page, self.theme)
         
         # Set icon
-        self._set_icon()
+        if self.paths['icon'].exists():
+            self.page.window.icon = str(self.paths['icon'])
         
-        # Build interface (navigation bar is built within create_main_interface)
+        # Build interface
         self.widgets = self.create_main_interface()
         self.setup_keyboard_shortcuts()
+        
+        # Handle window close
+        self.page.on_window_event = self.on_window_event
     
     def _load_settings(self):
         """Load settings from database"""
@@ -77,15 +83,6 @@ class HebrewLearningApp:
         self.db.save_setting('auto_play_audio', self.auto_play_audio)
         self.db.save_setting('show_variants', self.show_variants)
         self.db.save_setting('show_translations', self.show_translations)
-    
-    def _set_icon(self):
-        """Set application icon"""
-        if self.paths['icon'].exists():
-            try:
-                icon_img = tk.PhotoImage(file=str(self.paths['icon']))
-                self.root.iconphoto(True, icon_img)
-            except tk.TclError:
-                pass
     
     def _get_menu_callbacks(self):
         """Get all menu action callbacks for the navigation bar"""
@@ -142,40 +139,26 @@ class HebrewLearningApp:
         }
     
     def create_main_interface(self):
-        """Create the main interface - all UI details are in ui_components.py"""
-        # Create persistent checkbox variables for settings menu
-        self.show_variants_var = tk.BooleanVar(value=self.show_variants)
-        self.show_translations_var = tk.BooleanVar(value=self.show_translations)
-        self.auto_play_var = tk.BooleanVar(value=self.auto_play_audio)
+        """Create the main interface"""
         
         # Define callback functions for the UI
+        # Note: Flet buttons pass an event argument, so we need to handle it
+        # We use e=None to allow calling with or without an event argument
         callbacks = {
-            'toggle_theme': self.toggle_theme,
-            'play_audio': self.play_audio,
-            'show_answer': self.show_answer,
-            'mark_again': lambda: self.mark_answer('again'),
-            'mark_hard': lambda: self.mark_answer('hard'),
-            'mark_good': lambda: self.mark_answer('good'),
-            'mark_easy': lambda: self.mark_answer('easy')
+            'toggle_theme': lambda e=None: self.toggle_theme(),
+            'play_audio': lambda e=None: self.play_audio(),
+            'show_answer': lambda e=None: self.show_answer(),
+            'mark_again': lambda e=None: self.mark_answer('again'),
+            'mark_hard': lambda e=None: self.mark_answer('hard'),
+            'mark_good': lambda e=None: self.mark_answer('good'),
+            'mark_easy': lambda e=None: self.mark_answer('easy')
         }
         
         # Get menu callbacks for navigation bar
         menu_callbacks = self._get_menu_callbacks()
         
-        # Checkbox variables for settings menu
-        checkbox_vars = {
-            'show_variants': self.show_variants_var,
-            'show_translations': self.show_translations_var,
-            'auto_play': self.auto_play_var,
-        }
-        
-        # Build complete interface with all widgets including navigation bar
-        widgets = self.ui_builder.build_complete_interface(callbacks, menu_callbacks, checkbox_vars)
-        
-        # Update theme toggle button icon based on current mode
-        widgets['theme_toggle_btn']._text = "☀️" if self.dark_mode else "🌙"
-        if hasattr(widgets['theme_toggle_btn'], '_draw_button'):
-            widgets['theme_toggle_btn']._draw_button()
+        # Build complete interface
+        widgets = self.ui_builder.build_complete_interface(callbacks, menu_callbacks)
         
         # Store references to labels for easy access
         self.progress_label = widgets['progress_label']
@@ -184,71 +167,70 @@ class HebrewLearningApp:
         # Initialize display
         self._show_welcome_message(widgets)
         self._hide_response_buttons(widgets)
-        self._set_button_state(widgets, 'audio_btn', tk.DISABLED)
-        self._set_button_state(widgets, 'show_answer_btn', tk.DISABLED)
+        self._set_button_state(widgets, 'audio_btn', True) # Disabled
+        self._set_button_state(widgets, 'show_answer_btn', True) # Disabled
         
         return widgets
     
-    def _set_button_state(self, widgets, button_name, state):
-        """Set button state (handles all button types via duck typing)"""
+    def _set_button_state(self, widgets, button_name, disabled):
+        """Set button state"""
         if button_name in widgets:
             button = widgets[button_name]
-            button._state = state
-            if hasattr(button, '_draw_button'):
-                button._draw_button()
+            button.disabled = disabled
+            button.update()
     
     def _show_welcome_message(self, widgets):
         """Show welcome message"""
-        self.ui_builder.update_text(widgets['hebrew_text'], "Welcome! 🎓")
-        self.ui_builder.update_text(
-            widgets['trans_text'],
-            "Click 'Study' above to begin learning Hebrew!"
-        )
-        self.ui_builder.update_text(widgets['english_text'], "")
+        widgets['hebrew_text'].value = "Welcome! 🎓"
+        widgets['trans_text'].value = "Click 'Study' above to begin learning Hebrew!"
+        widgets['english_text'].value = ""
+        self.page.update()
     
     def _hide_response_buttons(self, widgets):
         """Hide all response buttons"""
         for btn_name in ['again_btn', 'hard_btn', 'good_btn', 'easy_btn']:
-            widgets[btn_name].grid_remove()
-            self._set_button_state(widgets, btn_name, tk.DISABLED)
+            widgets[btn_name].visible = False
+            widgets[btn_name].disabled = True
+        self.page.update()
     
     def _show_response_buttons(self, widgets):
         """Show all response buttons"""
         for btn_name in ['again_btn', 'hard_btn', 'good_btn', 'easy_btn']:
-            widgets[btn_name].grid()
-            self._set_button_state(widgets, btn_name, tk.NORMAL)
+            widgets[btn_name].visible = True
+            widgets[btn_name].disabled = False
+        self.page.update()
     
     def start_session(self, limit):
         """Start a study session"""
         count = self.session.start_session(limit)
         label = f"Top {limit}" if limit else "All Words"
-        self.progress_label.config(text=f"Studying {label} ({count} words)")
+        self.progress_label.value = f"Studying {label} ({count} words)"
         self.show_next_word()
     
     def show_custom_range_dialog(self):
         """Show custom range selection dialog"""
-        DialogHelper.show_custom_range_dialog(self.root, self.start_custom_session)
+        DialogHelper.show_custom_range_dialog(self.page, self.start_custom_session)
     
     def start_custom_session(self, start_rank, end_rank):
         """Start session with custom range"""
         count = self.session.start_custom_session(start_rank, end_rank)
         if count == 0:
-            messagebox.showinfo("No Words", f"No words found in rank range {start_rank}-{end_rank}")
+            self.page.snack_bar = ft.SnackBar(ft.Text(f"No words found in rank range {start_rank}-{end_rank}"))
+            self.page.snack_bar.open = True
+            self.page.update()
             return
-        self.progress_label.config(text=f"Custom Range: {start_rank}-{end_rank} ({count} words)")
+        self.progress_label.value = f"Custom Range: {start_rank}-{end_rank} ({count} words)"
         self.show_next_word()
     
     def practice_difficult_words(self, top_n):
         """Practice difficult words"""
         count = self.session.practice_difficult_words(top_n)
         if count == 0:
-            messagebox.showinfo(
-                "Practice",
-                f"No words needing practice in top {top_n}!\n"
-                f"All words are marked as Good or Easy."
-            )
+            self.page.snack_bar = ft.SnackBar(ft.Text(f"No words needing practice in top {top_n}!"))
+            self.page.snack_bar.open = True
+            self.page.update()
             return
-        self.progress_label.config(text=f"Practicing {count} Words Needing Review in Top {top_n}")
+        self.progress_label.value = f"Practicing {count} Words Needing Review in Top {top_n}"
         self.show_next_word()
     
     # ========== NEW STUDY MODE HANDLERS ==========
@@ -257,93 +239,84 @@ class HebrewLearningApp:
         """Start SRS review session"""
         count = self.session.start_srs_session()
         if count == 0:
-            messagebox.showinfo(
-                "SRS Review",
-                "No words due for review today!\n"
-                "Come back tomorrow or study new words."
-            )
+            self.page.snack_bar = ft.SnackBar(ft.Text("No words due for review today!"))
+            self.page.snack_bar.open = True
+            self.page.update()
             return
-        self.progress_label.config(text=f"SRS Review: {count} words due today")
+        self.progress_label.value = f"SRS Review: {count} words due today"
         self.show_next_word()
     
     def start_new_words_session(self):
         """Start learning new words session"""
         count = self.session.start_new_words_session(limit=10)
         if count == 0:
-            messagebox.showinfo(
-                "New Words",
-                "You've already reviewed all words!\n"
-                "Great job!"
-            )
+            self.page.snack_bar = ft.SnackBar(ft.Text("You've already reviewed all words!"))
+            self.page.snack_bar.open = True
+            self.page.update()
             return
-        self.progress_label.config(text=f"Learning {count} New Words")
+        self.progress_label.value = f"Learning {count} New Words"
         self.show_next_word()
     
     def start_category_session(self, category):
         """Start category-based session"""
         count = self.session.start_category_session(category)
         if count == 0:
-            messagebox.showinfo(
-                "Category",
-                f"No words found in category: {category}"
-            )
+            self.page.snack_bar = ft.SnackBar(ft.Text(f"No words found in category: {category}"))
+            self.page.snack_bar.open = True
+            self.page.update()
             return
-        self.progress_label.config(text=f"Category: {category} ({count} words)")
+        self.progress_label.value = f"Category: {category} ({count} words)"
         self.show_next_word()
     
     def start_register_session(self, register):
         """Start register-based session (modern/biblical/both)"""
         count = self.session.start_register_session(register)
         if count == 0:
-            messagebox.showinfo(
-                "Register",
-                f"No words found for register: {register}"
-            )
+            self.page.snack_bar = ft.SnackBar(ft.Text(f"No words found for register: {register}"))
+            self.page.snack_bar.open = True
+            self.page.update()
             return
         register_label = {"modern": "Modern Hebrew", "biblical": "Biblical Hebrew", "both": "Modern & Biblical"}
-        self.progress_label.config(text=f"{register_label.get(register, register)}: {count} words")
+        self.progress_label.value = f"{register_label.get(register, register)}: {count} words"
         self.show_next_word()
     
     def start_part_of_speech_session(self, pos):
         """Start part-of-speech session"""
         count = self.session.start_part_of_speech_session(pos)
         if count == 0:
-            messagebox.showinfo(
-                "Part of Speech",
-                f"No {pos}s found in vocabulary"
-            )
+            self.page.snack_bar = ft.SnackBar(ft.Text(f"No {pos}s found in vocabulary"))
+            self.page.snack_bar.open = True
+            self.page.update()
             return
-        self.progress_label.config(text=f"{pos.title()}s: {count} words")
+        self.progress_label.value = f"{pos.title()}s: {count} words"
         self.show_next_word()
     
     def start_weak_words_session(self):
         """Start weakest words session"""
         count = self.session.start_weak_words_session(limit=20)
         if count == 0:
-            messagebox.showinfo(
-                "Weak Words",
-                "No words with progress data found"
-            )
+            self.page.snack_bar = ft.SnackBar(ft.Text("No words with progress data found"))
+            self.page.snack_bar.open = True
+            self.page.update()
             return
-        self.progress_label.config(text=f"Reviewing 20 Weakest Words ({count} found)")
+        self.progress_label.value = f"Reviewing 20 Weakest Words ({count} found)"
         self.show_next_word()
     
     def start_strong_words_session(self):
         """Start strongest words session"""
         count = self.session.start_strong_words_session(limit=20)
         if count == 0:
-            messagebox.showinfo(
-                "Strong Words",
-                "No words with progress data found"
-            )
+            self.page.snack_bar = ft.SnackBar(ft.Text("No words with progress data found"))
+            self.page.snack_bar.open = True
+            self.page.update()
             return
-        self.progress_label.config(text=f"Reviewing 20 Strongest Words ({count} found)")
+        self.progress_label.value = f"Reviewing 20 Strongest Words ({count} found)"
         self.show_next_word()
     
     def start_random_session(self):
         """Start random words session"""
         count = self.session.start_random_session(count=10)
-        self.progress_label.config(text=f"Random Selection: {count} words")
+        self.progress_label.value = f"Random Selection: {count} words"
         self.show_next_word()
     
     def show_next_word(self):
@@ -357,27 +330,29 @@ class HebrewLearningApp:
         self.answer_shown = False
         
         # Update displays
-        self.ui_builder.update_text(self.widgets['hebrew_text'], word['hebrew'])
-        self.ui_builder.update_text(self.widgets['trans_text'], word['transliteration'])
-        self.ui_builder.update_text(self.widgets['english_text'], "")
+        self.widgets['hebrew_text'].value = word['hebrew']
+        self.widgets['trans_text'].value = word['transliteration']
+        self.widgets['english_text'].value = ""
         
         # Clear extra info labels
         if 'root_text' in self.widgets:
-            self.widgets['root_text'].config(text="")
+            self.widgets['root_text'].value = ""
         if 'notes_text' in self.widgets:
-            self.widgets['notes_text'].config(text="")
+            self.widgets['notes_text'].value = ""
         if 'variants_text' in self.widgets:
-            self.widgets['variants_text'].config(text="")
+            self.widgets['variants_text'].value = ""
         if 'translations_text' in self.widgets:
-            self.widgets['translations_text'].config(text="")
+            self.widgets['translations_text'].value = ""
         
         # Update stats
-        self.stats_label.config(text=self.session.get_progress_text())
+        self.stats_label.value = self.session.get_progress_text()
         
         # Enable buttons
-        self._set_button_state(self.widgets, 'audio_btn', tk.NORMAL)
-        self._set_button_state(self.widgets, 'show_answer_btn', tk.NORMAL)
+        self._set_button_state(self.widgets, 'audio_btn', False) # Enabled
+        self._set_button_state(self.widgets, 'show_answer_btn', False) # Enabled
         self._hide_response_buttons(self.widgets)
+        
+        self.page.update()
         
         # Auto-play audio
         if self.auto_play_audio:
@@ -390,22 +365,19 @@ class HebrewLearningApp:
             word = self.session.current_word
             
             # Show main English translation
-            self.ui_builder.update_text(
-                self.widgets['english_text'],
-                word['english']
-            )
+            self.widgets['english_text'].value = word['english']
             
             # Show root if available
             if 'root_text' in self.widgets:
                 root_value = word.get('root')
                 if root_value:
-                    self.widgets['root_text'].config(text=f"🔤 Root: {root_value}")
+                    self.widgets['root_text'].value = f"🔤 Root: {root_value}"
                 else:
-                    self.widgets['root_text'].config(text="")
+                    self.widgets['root_text'].value = ""
             
             # Show notes if available
             if 'notes_text' in self.widgets and word.get('notes'):
-                self.widgets['notes_text'].config(text=f"ℹ️  {word['notes']}")
+                self.widgets['notes_text'].value = f"ℹ️  {word['notes']}"
             
             # Show variants if enabled
             if self.show_variants and 'variants_text' in self.widgets and word.get('lemma_id'):
@@ -414,7 +386,7 @@ class HebrewLearningApp:
                     variant_text = "📝 Variants: " + ", ".join(
                         f"{v['form']} ({v['description']})" for v in variants
                     )
-                    self.widgets['variants_text'].config(text=variant_text)
+                    self.widgets['variants_text'].value = variant_text
             
             # Show translations if enabled
             if self.show_translations and 'translations_text' in self.widgets and word.get('lemma_id'):
@@ -423,9 +395,10 @@ class HebrewLearningApp:
                     trans_text = "🌍 Translations: " + ", ".join(
                         f"{t['language']}: {t['translation']}" for t in translations
                     )
-                    self.widgets['translations_text'].config(text=trans_text)
+                    self.widgets['translations_text'].value = trans_text
             
             self._show_response_buttons(self.widgets)
+            self.page.update()
     
     def mark_answer(self, confidence_level):
         """Mark answer with confidence level"""
@@ -450,21 +423,16 @@ class HebrewLearningApp:
         """Show session completion"""
         stats = self.session.session_stats
         
-        self.ui_builder.update_text(
-            self.widgets['hebrew_text'],
-            "🎉 Session Complete!"
-        )
-        self.ui_builder.update_text(
-            self.widgets['trans_text'],
-            f"Total: {stats['total']}  |  Good/Easy: {stats['correct']}  |  Hard/Again: {stats['incorrect']}"
-        )
-        self.ui_builder.update_text(self.widgets['english_text'], "")
+        self.widgets['hebrew_text'].value = "🎉 Session Complete!"
+        self.widgets['trans_text'].value = f"Total: {stats['total']}  |  Good/Easy: {stats['correct']}  |  Hard/Again: {stats['incorrect']}"
+        self.widgets['english_text'].value = ""
         
-        self._set_button_state(self.widgets, 'audio_btn', tk.DISABLED)
-        self._set_button_state(self.widgets, 'show_answer_btn', tk.DISABLED)
+        self._set_button_state(self.widgets, 'audio_btn', True) # Disabled
+        self._set_button_state(self.widgets, 'show_answer_btn', True) # Disabled
         self._hide_response_buttons(self.widgets)
         
-        self.progress_label.config(text="Select 'Study' to start a new session")
+        self.progress_label.value = "Select 'Study' to start a new session"
+        self.page.update()
     
     def play_audio(self):
         """Play audio for current word"""
@@ -477,83 +445,94 @@ class HebrewLearningApp:
         self.theme = Themes.get_theme(self.dark_mode)
         self.ui_builder.apply_theme(self.widgets, self.theme)
         
-        # Update theme toggle button icon
-        if 'theme_toggle_btn' in self.widgets:
-            new_icon = "☀️" if self.dark_mode else "🌙"
-            btn = self.widgets['theme_toggle_btn']
-            if hasattr(btn, '_text'):
-                btn._text = new_icon
-                if hasattr(btn, '_draw_button'):
-                    btn._draw_button()
-        
         print(f"Theme switched to {'dark' if self.dark_mode else 'light'} mode")
     
     def toggle_auto_play(self):
         """Toggle auto-play audio"""
-        self.auto_play_audio = self.auto_play_var.get()
+        self.auto_play_audio = not self.auto_play_audio
         self._save_settings()
     
     def toggle_variants(self):
         """Toggle showing word variants"""
-        self.show_variants = self.show_variants_var.get()
+        self.show_variants = not self.show_variants
         self._save_settings()
     
     def toggle_translations(self):
         """Toggle showing translations"""
-        self.show_translations = self.show_translations_var.get()
+        self.show_translations = not self.show_translations
         self._save_settings()
     
     def reset_progress(self):
         """Reset all progress"""
-        if messagebox.askyesno(
-            "Reset Progress",
-            "Are you sure you want to reset all progress?\nThis cannot be undone."
-        ):
+        def on_yes(e):
             self.progress = self.progress_manager._create_empty_progress()
             self.progress_manager.save(self.progress)
             self.session.progress = self.progress
-            messagebox.showinfo("Reset Complete", "Your progress has been reset.")
+            self.page.dialog.open = False
+            self.page.snack_bar = ft.SnackBar(ft.Text("Your progress has been reset."))
+            self.page.snack_bar.open = True
+            self.page.update()
+
+        def on_no(e):
+            self.page.dialog.open = False
+            self.page.update()
+
+        dlg = ft.AlertDialog(
+            title=ft.Text("Reset Progress"),
+            content=ft.Text("Are you sure you want to reset all progress?\nThis cannot be undone."),
+            actions=[
+                ft.TextButton("Yes", on_click=on_yes),
+                ft.TextButton("No", on_click=on_no),
+            ],
+        )
+        self.page.dialog = dlg
+        dlg.open = True
+        self.page.update()
     
     def show_about(self):
         """Show about dialog"""
-        DialogHelper.show_about_dialog(len(self.vocabulary))
+        DialogHelper.show_about_dialog(self.page, len(self.vocabulary))
     
     def show_statistics(self):
         """Show statistics dialog"""
-        DialogHelper.show_statistics(len(self.vocabulary), self.progress)
+        DialogHelper.show_statistics(self.page, len(self.vocabulary), self.progress)
 
     def setup_keyboard_shortcuts(self):
         """Setup keyboard shortcuts"""
-        # Answer visibility
-        self.root.bind('<space>', lambda e: self.show_answer() if self.session.current_word and not self.answer_shown else None)
-        
-        # Confidence levels - consolidated
-        shortcuts = {
-            'again': ['1', 'a', 'A'],
-            'hard': ['2', 'h', 'H'],
-            'good': ['3', 'g', 'G'],
-            'easy': ['4', 'e', 'E']
-        }
-        for action, keys in shortcuts.items():
-            for key in keys:
-                self.root.bind(key, lambda e, a=action: self.mark_answer(a) if self.answer_shown else None)
-        
-        # Audio and theme
-        for key in ['p', 'P']:
-            self.root.bind(key, lambda e: self.play_audio() if self.session.current_word else None)
-        self.root.bind('\\', lambda e: self.toggle_theme())
-    
-    def on_closing(self):
-        """Handle app closing - cleanup database connection"""
-        self._save_settings()
-        self.db.close()
-        self.root.destroy()
+        def on_keyboard(e: ft.KeyboardEvent):
+            if e.key == " ":
+                if self.session.current_word and not self.answer_shown:
+                    self.show_answer()
+            elif e.key in ["1", "A", "a"]:
+                if self.answer_shown: self.mark_answer('again')
+            elif e.key in ["2", "H", "h"]:
+                if self.answer_shown: self.mark_answer('hard')
+            elif e.key in ["3", "G", "g"]:
+                if self.answer_shown: self.mark_answer('good')
+            elif e.key in ["4", "E", "e"]:
+                if self.answer_shown: self.mark_answer('easy')
+            elif e.key in ["P", "p"]:
+                if self.session.current_word: self.play_audio()
+            elif e.key == "\\":
+                self.toggle_theme()
 
-def main():
-    root = tk.Tk()
-    app = HebrewLearningApp(root)
-    root.protocol("WM_DELETE_WINDOW", app.on_closing)
-    root.mainloop()
+        self.page.on_keyboard_event = on_keyboard
+    
+    def on_window_event(self, e):
+        """Handle window events"""
+        if e.data == "close":
+            self._save_settings()
+            self.db.close()
+            self.page.window_destroy()
+
+def main(page: ft.Page):
+    app = HebrewLearningApp(page)
+    page.title = "Hebrew Learning App"
+    page.window.icon = "icon.png"
 
 if __name__ == '__main__':
-    main()
+    ft.app(
+        target=main,
+        name="Hebrew Learning App",
+        assets_dir="assets"
+        )

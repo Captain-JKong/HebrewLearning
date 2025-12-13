@@ -1,12 +1,10 @@
 """
 UI Components
-Builds and manages the graphical interface
+Builds and manages the graphical interface using Flet
 All UI configuration, themes, layout, fonts, colors, and widget creation in one place
 """
 
-import tkinter as tk
-from tkinter import messagebox
-
+import flet as ft
 
 # ============================================================================
 #                           UI CONFIGURATION SECTION
@@ -17,129 +15,50 @@ class UIConfig:
     """All UI layout parameters - modify these to adjust the interface"""
     
     # ===== LAYOUT SPACING =====
-    WINDOW_TOP_PADDING = 15          # Space at top of window
-    WINDOW_SIDE_PADDING = 40         # Space on sides of window
-    CARD_FRAME_PADY = 15             # Vertical padding around main card
-    CARD_FRAME_PADX = 40             # Horizontal padding around main card
-    
-    # ===== DIALOGS =====
-    CUSTOM_RANGE_DIALOG_GEOMETRY = "300x150"  # Custom range dialog size
+    WINDOW_PADDING = 20
+    CARD_PADDING = 20
     
     # ===== TEXT BOXES =====
-    TEXT_BOX_VERTICAL_SPACING = 3    # Space between text boxes (pady)
-    TEXT_BOX_HORIZONTAL_PADDING = 12 # Side padding for text boxes (padx)
-    TEXT_BOX_BORDER_RADIUS = 12      # Corner roundness of text boxes
-    TEXT_BOX_INNER_PADX = 10         # Text padding inside box (horizontal)
-    TEXT_BOX_INNER_PADY = 5          # Text padding inside box (vertical)
-    TEXT_BOX_HEIGHT = 1              # Line height for text boxes
-    TEXT_BOX_CONTAINER_HEIGHT_SINGLE = 60  # Fixed height for single-line boxes (Hebrew)
-    TEXT_BOX_CONTAINER_HEIGHT_MULTI = 85   # Fixed height for multi-line boxes
-    TEXT_BOX_INNER_REL_WIDTH = 0.96  # Relative width of text inside container
-    TEXT_BOX_INNER_REL_HEIGHT = 0.85 # Relative height of text inside container
-    INFO_BOX_HEIGHT = 120            # Fixed height for info box
-    INFO_BOX_PADDING = 5             # Padding inside info box
-    INFO_BOX_LABEL_PADY = 2          # Vertical padding for info labels
-    INFO_BOX_WRAP_LENGTH = 600       # Text wrap length for info labels
+    TEXT_BOX_BORDER_RADIUS = 12
+    TEXT_BOX_PADDING = 10
     
     # ===== FONTS =====
     # Hebrew text
     HEBREW_FONT_FAMILY = 'Arial Hebrew'
     HEBREW_FONT_SIZE = 36
-    HEBREW_FONT_WEIGHT = 'bold'
+    HEBREW_FONT_WEIGHT = ft.FontWeight.BOLD
     
     # Transliteration text
     TRANS_FONT_FAMILY = 'Helvetica'
     TRANS_FONT_SIZE = 18
-    TRANS_FONT_WEIGHT = 'normal'
+    TRANS_FONT_WEIGHT = ft.FontWeight.NORMAL
     
     # English text
     ENGLISH_FONT_FAMILY = 'Helvetica'
     ENGLISH_FONT_SIZE = 20
-    ENGLISH_FONT_WEIGHT = 'bold'
+    ENGLISH_FONT_WEIGHT = ft.FontWeight.BOLD
     
     # Title
     TITLE_FONT_FAMILY = 'Helvetica'
     TITLE_FONT_SIZE = 24
-    TITLE_FONT_WEIGHT = 'bold'
+    TITLE_FONT_WEIGHT = ft.FontWeight.BOLD
     
     # Progress/Stats labels
     LABEL_FONT_FAMILY = 'Helvetica'
-    LABEL_FONT_SIZE = 11
-    LABEL_FONT_WEIGHT = 'normal'
+    LABEL_FONT_SIZE = 12
+    LABEL_FONT_WEIGHT = ft.FontWeight.NORMAL
     
     # Keyboard hint
     HINT_FONT_FAMILY = 'Helvetica'
-    HINT_FONT_SIZE = 9
-    HINT_FONT_WEIGHT = 'italic'
+    HINT_FONT_SIZE = 10
+    HINT_FONT_WEIGHT = ft.FontWeight.W_300 # Italic not directly supported in weight, handled in style
     
     # ===== BUTTONS =====
-    CARD_BORDER_RADIUS = 20          # Corner roundness of main card
-    BUTTON_BORDER_RADIUS = 8         # Corner roundness of buttons
+    CARD_BORDER_RADIUS = 20
+    BUTTON_BORDER_RADIUS = 8
     
     # Navigation bar
-    NAV_BAR_PADX = 40                # Horizontal padding for nav bar
-    NAV_BAR_PADY = 8                 # Vertical padding for nav bar
-    NAV_BUTTON_PADX = 12             # Padding inside nav buttons
-    NAV_BUTTON_PADY = 6              # Padding inside nav buttons
-    NAV_BUTTON_SPACING = 4           # Space between nav buttons
-    NAV_BUTTON_FONT_SIZE = 11        # Font size for nav buttons
-    
-    # Main buttons (Audio, Show Answer)
-    MAIN_BUTTON_PADX = 18
-    MAIN_BUTTON_PADY = 8
-    MAIN_BUTTON_FONT_SIZE = 11
-    MAIN_BUTTON_SPACING = 6          # Space between buttons (grid padx)
-    MAIN_BUTTON_ROW_SPACING = 5      # Vertical space (grid pady)
-    
-    # Response buttons (Again, Hard, Good, Easy)
-    RESPONSE_BUTTON_PADX = 14
-    RESPONSE_BUTTON_PADY = 7
-    RESPONSE_BUTTON_FONT_SIZE = 10
-    RESPONSE_BUTTON_SPACING = 3      # Space between buttons (grid padx)
-    RESPONSE_BUTTON_ROW_SPACING = 5  # Vertical space (grid pady)
-    
-    # Theme toggle button
-    THEME_BUTTON_PADX = 12
-    THEME_BUTTON_PADY = 8
-    THEME_BUTTON_FONT_SIZE = 18
-    
-    # ===== BUTTON FRAME SPACING =====
-    BUTTON_FRAME_PADY = 10           # Space above/below button frames
-    RESPONSE_FRAME_PADY = 10         # Space above/below response frame
-    KEYBOARD_HINT_TOP_PADDING = 10   # Space above keyboard hint
-    
-    # ===== TITLE SECTION =====
-    TITLE_BOTTOM_PADDING = 10        # Space below stats label
-    
-    @staticmethod
-    def get_hebrew_font():
-        """Get Hebrew text font tuple"""
-        return (UIConfig.HEBREW_FONT_FAMILY, UIConfig.HEBREW_FONT_SIZE, UIConfig.HEBREW_FONT_WEIGHT)
-    
-    @staticmethod
-    def get_trans_font():
-        """Get transliteration text font tuple"""
-        return (UIConfig.TRANS_FONT_FAMILY, UIConfig.TRANS_FONT_SIZE, UIConfig.TRANS_FONT_WEIGHT)
-    
-    @staticmethod
-    def get_english_font():
-        """Get English text font tuple"""
-        return (UIConfig.ENGLISH_FONT_FAMILY, UIConfig.ENGLISH_FONT_SIZE, UIConfig.ENGLISH_FONT_WEIGHT)
-    
-    @staticmethod
-    def get_title_font():
-        """Get title font tuple"""
-        return (UIConfig.TITLE_FONT_FAMILY, UIConfig.TITLE_FONT_SIZE, UIConfig.TITLE_FONT_WEIGHT)
-    
-    @staticmethod
-    def get_label_font():
-        """Get label font tuple"""
-        return (UIConfig.LABEL_FONT_FAMILY, UIConfig.LABEL_FONT_SIZE, UIConfig.LABEL_FONT_WEIGHT)
-    
-    @staticmethod
-    def get_hint_font():
-        """Get hint font tuple"""
-        return (UIConfig.HINT_FONT_FAMILY, UIConfig.HINT_FONT_SIZE, UIConfig.HINT_FONT_WEIGHT)
+    NAV_BUTTON_FONT_SIZE = 14
 
 
 class Themes:
@@ -202,455 +121,102 @@ class Themes:
 
 
 # ============================================================================
-#                           DROPDOWN MENU BUTTON CLASS
-# ============================================================================
-
-class DropdownMenuButton:
-    """A button that shows a dropdown menu when clicked - uses same rounded style as other buttons"""
-    
-    def __init__(self, parent, text, theme, menu_items):
-        """
-        Create a dropdown menu button with rounded corners matching app style
-        
-        Args:
-            parent: Parent widget
-            text: Button label text
-            theme: Current theme dictionary
-            menu_items: List of menu items, each is either:
-                - dict with 'label' and 'command' for regular items
-                - dict with 'label' and 'submenu' (list of items) for submenus
-                - dict with 'separator': True for separators
-                - dict with 'label', 'variable', 'command' for checkbutton items
-        """
-        self.parent = parent
-        self.text = f"  {text} ▼"
-        self.theme = theme
-        self.menu_items = menu_items
-        self.menu = None
-        
-        # Create canvas for rounded button (same approach as UIBuilder.create_button)
-        self.canvas = tk.Canvas(
-            parent,
-            highlightthickness=0,
-            bd=0,
-            bg=parent.cget('bg') if hasattr(parent, 'cget') else theme['nav_bg']
-        )
-        
-        # Store properties
-        self.canvas._bg_color = theme['nav_btn_bg']
-        self.canvas._text = self.text
-        self.canvas._padx = UIConfig.NAV_BUTTON_PADX
-        self.canvas._pady = UIConfig.NAV_BUTTON_PADY
-        self.canvas._font_size = UIConfig.NAV_BUTTON_FONT_SIZE
-        self.canvas._state = tk.NORMAL
-        self.canvas._is_canvas_button = True
-        
-        # Bind events
-        self.canvas.bind('<Button-1>', self._on_click)
-        self.canvas.bind('<Enter>', self._on_enter)
-        self.canvas.bind('<Leave>', self._on_leave)
-        
-        # Initial draw
-        self.canvas.after(10, self._draw_button)
-        self.canvas._draw_button = self._draw_button
-    
-    def _draw_button(self):
-        """Draw the rounded button - same style as other app buttons"""
-        self.canvas.delete("all")
-        
-        padx = self.canvas._padx
-        pady = self.canvas._pady
-        font_size = self.canvas._font_size
-        text = self.canvas._text
-        
-        # Measure text size
-        font = ('Helvetica', font_size, 'bold')
-        temp_text = self.canvas.create_text(0, 0, text=text, font=font)
-        bbox = self.canvas.bbox(temp_text)
-        self.canvas.delete(temp_text)
-        
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
-        
-        # Calculate canvas size
-        width = text_width + padx * 2
-        height = text_height + pady * 2
-        radius = UIConfig.BUTTON_BORDER_RADIUS
-        
-        # Update canvas size
-        self.canvas.config(width=width, height=height)
-        
-        # Get parent background
-        try:
-            parent_bg = self.parent.cget('bg')
-        except:
-            parent_bg = self.theme['nav_bg']
-        self.canvas.config(bg=parent_bg)
-        
-        # Draw rounded rectangle
-        current_bg = self.canvas._bg_color
-        self.canvas.create_arc(0, 0, radius*2, radius*2, start=90, extent=90, fill=current_bg, outline=current_bg, tags="bg")
-        self.canvas.create_arc(width-radius*2, 0, width, radius*2, start=0, extent=90, fill=current_bg, outline=current_bg, tags="bg")
-        self.canvas.create_arc(0, height-radius*2, radius*2, height, start=180, extent=90, fill=current_bg, outline=current_bg, tags="bg")
-        self.canvas.create_arc(width-radius*2, height-radius*2, width, height, start=270, extent=90, fill=current_bg, outline=current_bg, tags="bg")
-        self.canvas.create_rectangle(radius, 0, width-radius, height, fill=current_bg, outline=current_bg, tags="bg")
-        self.canvas.create_rectangle(0, radius, width, height-radius, fill=current_bg, outline=current_bg, tags="bg")
-        
-        # Draw text
-        text_color = self.theme['nav_btn_fg']
-        self.canvas.create_text(
-            width/2, height/2,
-            text=text,
-            font=font,
-            fill=text_color,
-            tags="text"
-        )
-    
-    def _on_click(self, event):
-        """Handle button click - show dropdown menu"""
-        self._show_menu()
-    
-    def _on_enter(self, event):
-        """Handle mouse enter (hover effect)"""
-        self.canvas.config(cursor='hand2')
-        self.canvas._bg_color = self.theme['nav_btn_hover']
-        self._draw_button()
-    
-    def _on_leave(self, event):
-        """Handle mouse leave"""
-        self.canvas.config(cursor='')
-        self.canvas._bg_color = self.theme['nav_btn_bg']
-        self._draw_button()
-    
-    def _show_menu(self):
-        """Show the dropdown menu below the button"""
-        if self.menu:
-            self.menu.destroy()
-        
-        self.menu = tk.Menu(self.canvas, tearoff=0)
-        self._build_menu(self.menu, self.menu_items)
-        
-        # Position menu below button
-        x = self.canvas.winfo_rootx()
-        y = self.canvas.winfo_rooty() + self.canvas.winfo_height()
-        self.menu.post(x, y)
-    
-    def _build_menu(self, menu, items):
-        """Recursively build menu from items list"""
-        for item in items:
-            if item.get('separator'):
-                menu.add_separator()
-            elif 'submenu' in item:
-                submenu = tk.Menu(menu, tearoff=0)
-                self._build_menu(submenu, item['submenu'])
-                menu.add_cascade(label=item['label'], menu=submenu)
-            elif 'variable' in item:
-                menu.add_checkbutton(
-                    label=item['label'],
-                    variable=item['variable'],
-                    command=item.get('command')
-                )
-            else:
-                menu.add_command(label=item['label'], command=item.get('command'))
-    
-    def pack(self, **kwargs):
-        self.canvas.pack(**kwargs)
-    
-    def grid(self, **kwargs):
-        self.canvas.grid(**kwargs)
-    
-    def update_theme(self, theme):
-        """Update button colors for theme change"""
-        self.theme = theme
-        self.canvas._bg_color = theme['nav_btn_bg']
-        # Update parent background reference
-        try:
-            parent_bg = self.parent.cget('bg')
-            self.canvas.config(bg=parent_bg)
-        except:
-            pass
-        self._draw_button()
-
-
-# ============================================================================
 #                           UI BUILDER CLASSES
 # ============================================================================
 
 class UIBuilder:
     """Builds UI components"""
     
-    def __init__(self, root, theme):
-        self.root = root
+    def __init__(self, page: ft.Page, theme):
+        self.page = page
         self.theme = theme
         self.widgets = {}
     
-    def _create_rounded_frame(self, parent, bg, radius=15):
-        """Create a frame with rounded corners using Canvas - properly handles theme changes"""
-        # Store parent reference to get current background dynamically
-        container = tk.Frame(parent, bg=bg, highlightthickness=0)
-        canvas = tk.Canvas(container, highlightthickness=0, bd=0)
-        canvas.pack(fill=tk.BOTH, expand=True)
-        
-        def draw_rounded_rect(event=None):
-            canvas.delete("all")
-            width = canvas.winfo_width()
-            height = canvas.winfo_height()
-            
-            # Get the actual parent background color dynamically
-            try:
-                parent_bg = parent.cget('bg')
-            except:
-                parent_bg = self.root.cget('bg')
-            
-            # Set canvas background to match parent (to blend corners)
-            canvas.config(bg=parent_bg)
-            
-            # Use the stored background color (updated by theme changes)
-            current_bg = container._bg_color
-            
-            # Create rounded rectangle with the content background
-            canvas.create_arc(0, 0, radius*2, radius*2, start=90, extent=90, fill=current_bg, outline=current_bg, tags="shape")
-            canvas.create_arc(width-radius*2, 0, width, radius*2, start=0, extent=90, fill=current_bg, outline=current_bg, tags="shape")
-            canvas.create_arc(0, height-radius*2, radius*2, height, start=180, extent=90, fill=current_bg, outline=current_bg, tags="shape")
-            canvas.create_arc(width-radius*2, height-radius*2, width, height, start=270, extent=90, fill=current_bg, outline=current_bg, tags="shape")
-            
-            canvas.create_rectangle(radius, 0, width-radius, height, fill=current_bg, outline=current_bg, tags="shape")
-            canvas.create_rectangle(0, radius, width, height-radius, fill=current_bg, outline=current_bg, tags="shape")
-        
-        canvas.bind('<Configure>', draw_rounded_rect)
-        container._canvas = canvas
-        container._bg_color = bg
-        container._radius = radius
-        container._parent_ref = parent
-        return container
-    
-    def create_card_frame(self):
-        """Create main card frame with rounded corners"""
-        # Create rounded container for the main card
-        card_container = self._create_rounded_frame(
-            self.root, 
-            self.theme['card_bg'], 
-            radius=UIConfig.CARD_BORDER_RADIUS
-        )
-        card_container.pack(
-            pady=UIConfig.CARD_FRAME_PADY, 
-            padx=UIConfig.CARD_FRAME_PADX, 
-            fill=tk.BOTH, 
-            expand=True
-        )
-        
-        # Create inner frame to hold content
-        inner_frame = tk.Frame(
-            card_container,
-            bg=self.theme['card_bg'],
-            relief=tk.FLAT,
-            borderwidth=0,
-            highlightthickness=0
-        )
-        inner_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=0.96, relheight=0.96)
-        
-        # Store references for theme updates
-        inner_frame._parent = card_container
-        card_container._inner_frame = inner_frame
-        return inner_frame
-    
-    def create_text_widget(self, parent, height, font, bg, fg):
+    def create_text_widget(self, font_family, font_size, font_weight, bg, fg, height=None):
         """Create a text display widget with rounded corners"""
-        container_height = UIConfig.TEXT_BOX_CONTAINER_HEIGHT_SINGLE if height == 1 else UIConfig.TEXT_BOX_CONTAINER_HEIGHT_MULTI
-        
-        rounded_container = self._create_rounded_frame(parent, bg, radius=UIConfig.TEXT_BOX_BORDER_RADIUS)
-        rounded_container.pack(
-            fill=tk.X, 
-            expand=False, 
-            pady=UIConfig.TEXT_BOX_VERTICAL_SPACING, 
-            padx=UIConfig.TEXT_BOX_HORIZONTAL_PADDING
-        )
-        rounded_container.config(height=container_height)
-        rounded_container.pack_propagate(False)
-        
-        text_widget = tk.Text(
-            rounded_container,
-            height=height,
-            font=font,
-            bg=bg,
-            fg=fg,
-            relief=tk.FLAT,
-            borderwidth=0,
-            highlightthickness=0,
-            wrap=tk.WORD,
-            padx=UIConfig.TEXT_BOX_INNER_PADX,
-            pady=UIConfig.TEXT_BOX_INNER_PADY
-        )
-        text_widget.place(
-            relx=0.5, rely=0.5, anchor=tk.CENTER,
-            relwidth=UIConfig.TEXT_BOX_INNER_REL_WIDTH,
-            relheight=UIConfig.TEXT_BOX_INNER_REL_HEIGHT
+        text = ft.Text(
+            value="",
+            font_family=font_family,
+            size=font_size,
+            weight=font_weight,
+            color=fg,
+            text_align=ft.TextAlign.CENTER,
+            selectable=True
         )
         
-        text_widget._rounded_container = rounded_container
-        text_widget._rounded_bg = bg
-        return text_widget
+        container = ft.Container(
+            content=text,
+            bgcolor=bg,
+            border_radius=UIConfig.TEXT_BOX_BORDER_RADIUS,
+            padding=UIConfig.TEXT_BOX_PADDING,
+            alignment=ft.alignment.center,
+            width=float('inf') # Expand horizontally
+        )
+        
+        if height:
+            container.height = height
+            
+        return container, text
     
-    def create_label(self, parent, text, font, bg, fg='#666', **kwargs):
-        """Create a label that properly handles theme changes"""
-        label = tk.Label(
-            parent,
+    def create_button(self, text, on_click, bg, fg='white', width=None):
+        """Create a rounded button"""
+        return ft.ElevatedButton(
             text=text,
-            font=font,
-            bg=bg,
-            fg=fg,
-            **kwargs
+            on_click=on_click,
+            style=ft.ButtonStyle(
+                color=fg,
+                bgcolor=bg,
+                shape=ft.RoundedRectangleBorder(radius=UIConfig.BUTTON_BORDER_RADIUS),
+            ),
+            width=width
         )
-        label._fg_color = fg  # Store for theme updates
-        return label
-    
-    def create_button(self, parent, text, command, bg, **kwargs):
-        """Create a clickable rounded button using Canvas"""
-        padx = kwargs.get('padx', 15)
-        pady = kwargs.get('pady', 8)
-        font_size = kwargs.get('font_size', 11)
-        
-        # Create canvas for rounded button
-        canvas = tk.Canvas(
-            parent,
-            highlightthickness=0,
-            bd=0,
-            bg=parent.cget('bg') if hasattr(parent, 'cget') else self.root.cget('bg')
-        )
-        
-        # Store properties
-        canvas._bg_color = bg
-        canvas._text = text
-        canvas._command = command
-        canvas._padx = padx
-        canvas._pady = pady
-        canvas._font_size = font_size
-        canvas._state = tk.NORMAL
-        canvas._is_canvas_button = True
-        
-        def draw_button():
-            """Draw the rounded button"""
-            canvas.delete("all")
-            
-            # Measure text size
-            font = ('Helvetica', font_size, 'bold')
-            temp_text = canvas.create_text(0, 0, text=text, font=font)
-            bbox = canvas.bbox(temp_text)
-            canvas.delete(temp_text)
-            
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-            
-            # Calculate canvas size
-            width = text_width + padx * 2
-            height = text_height + pady * 2
-            radius = UIConfig.BUTTON_BORDER_RADIUS
-            
-            # Update canvas size
-            canvas.config(width=width, height=height)
-            
-            # Get parent background
-            try:
-                parent_bg = parent.cget('bg')
-            except:
-                parent_bg = self.root.cget('bg')
-            canvas.config(bg=parent_bg)
-            
-            # Draw rounded rectangle
-            current_bg = canvas._bg_color
-            canvas.create_arc(0, 0, radius*2, radius*2, start=90, extent=90, fill=current_bg, outline=current_bg, tags="bg")
-            canvas.create_arc(width-radius*2, 0, width, radius*2, start=0, extent=90, fill=current_bg, outline=current_bg, tags="bg")
-            canvas.create_arc(0, height-radius*2, radius*2, height, start=180, extent=90, fill=current_bg, outline=current_bg, tags="bg")
-            canvas.create_arc(width-radius*2, height-radius*2, width, height, start=270, extent=90, fill=current_bg, outline=current_bg, tags="bg")
-            canvas.create_rectangle(radius, 0, width-radius, height, fill=current_bg, outline=current_bg, tags="bg")
-            canvas.create_rectangle(0, radius, width, height-radius, fill=current_bg, outline=current_bg, tags="bg")
-            
-            # Draw text
-            text_color = 'white' if canvas._state == tk.NORMAL else '#aaa'
-            canvas.create_text(
-                width/2, height/2,
-                text=text,
-                font=font,
-                fill=text_color,
-                tags="text"
-            )
-        
-        def on_click(event):
-            """Handle button click"""
-            if canvas._state == tk.NORMAL and canvas._command:
-                canvas._command()
-        
-        def on_enter(event):
-            """Handle mouse enter (hover effect)"""
-            if canvas._state == tk.NORMAL:
-                canvas.config(cursor='hand2')
-        
-        def on_leave(event):
-            """Handle mouse leave"""
-            canvas.config(cursor='')
-        
-        # Bind events
-        canvas.bind('<Button-1>', on_click)
-        canvas.bind('<Enter>', on_enter)
-        canvas.bind('<Leave>', on_leave)
-        
-        # Initial draw
-        canvas.after(10, draw_button)
-        canvas._draw_button = draw_button
-        
-        return canvas
-    
-    def update_text(self, text_widget, content):
-        """Update text widget content"""
-        text_widget.config(state=tk.NORMAL)
-        text_widget.delete('1.0', tk.END)
-        text_widget.insert('1.0', content)
-        text_widget.config(state=tk.DISABLED)
-    
+
     def build_complete_interface(self, callbacks, menu_callbacks=None, checkbox_vars=None):
         """
         Build the complete user interface with all widgets
-        
-        Args:
-            callbacks: Dictionary with callback functions:
-                - 'toggle_theme': Function to toggle dark/light mode
-                - 'play_audio': Function to play audio
-                - 'show_answer': Function to show answer
-                - 'mark_again': Function to mark word as 'again'
-                - 'mark_hard': Function to mark word as 'hard'
-                - 'mark_good': Function to mark word as 'good'
-                - 'mark_easy': Function to mark word as 'easy'
-            menu_callbacks: Optional dictionary with menu action callbacks for navigation bar
-            checkbox_vars: Optional dictionary with tk.BooleanVar for checkbox menu items
-        
-        Returns:
-            Dictionary containing all created widgets with keys:
-            - Frames: 'nav_bar', 'top_bar', 'title_frame', 'theme_frame', 'card_frame', 
-                     'button_frame', 'response_frame'
-            - Labels: 'title_label', 'progress_label', 'stats_label', 'keyboard_hint'
-            - Text widgets: 'hebrew_text', 'trans_text', 'english_text'
-            - Buttons: 'theme_toggle_btn', 'audio_btn', 'show_answer_btn',
-                      'again_btn', 'hard_btn', 'good_btn', 'easy_btn'
-            - Nav buttons: 'nav_study', 'nav_settings', 'nav_vocabulary', 'nav_help'
         """
         widgets = {}
         
         # ===== NAVIGATION BAR =====
         if menu_callbacks:
-            nav_bar = tk.Frame(self.root, bg=self.theme['nav_bg'])
-            nav_bar.pack(fill=tk.X, padx=0, pady=0)
-            widgets['nav_bar'] = nav_bar
             
-            nav_buttons_frame = tk.Frame(nav_bar, bg=self.theme['nav_bg'])
-            nav_buttons_frame.pack(
-                padx=UIConfig.NAV_BAR_PADX, 
-                pady=UIConfig.NAV_BAR_PADY,
-                anchor='w'
-            )
-            widgets['nav_buttons_frame'] = nav_buttons_frame
-            
-            # Build Study menu items
-            study_items = [
+            def create_menu_item(label, command):
+                return ft.PopupMenuItem(text=label, on_click=lambda _: command())
+
+            def create_submenu_item(label, submenu_items, indent_level=0):
+                items = []
+                # Add header for the submenu
+                prefix = "  " * indent_level
+                items.append(ft.PopupMenuItem(text=f"{prefix}--- {label} ---", disabled=True))
+                
+                for item in submenu_items:
+                    if item.get('separator'):
+                        items.append(ft.PopupMenuItem(height=6, content=ft.Divider(thickness=1), disabled=True))
+                    elif 'submenu' in item:
+                        items.extend(create_submenu_item(item['label'], item['submenu'], indent_level + 1))
+                    elif 'variable' in item:
+                         item_text = f"{'  ' * (indent_level + 1)}{item['label']}"
+                         items.append(ft.PopupMenuItem(text=item_text, on_click=lambda _, cmd=item.get('command'): cmd() if cmd else None))
+                    else:
+                        item_text = f"{'  ' * (indent_level + 1)}{item['label']}"
+                        items.append(ft.PopupMenuItem(text=item_text, on_click=lambda _, cmd=item.get('command'): cmd() if cmd else None))
+                return items
+
+            def build_menu_items(items_config):
+                items = []
+                for item in items_config:
+                    if item.get('separator'):
+                        items.append(ft.PopupMenuItem(height=6, content=ft.Divider(thickness=1), disabled=True))
+                    elif 'submenu' in item:
+                        items.extend(create_submenu_item(item['label'], item['submenu']))
+                    elif 'variable' in item:
+                        items.append(ft.PopupMenuItem(text=item['label'], on_click=lambda _, cmd=item.get('command'): cmd() if cmd else None))
+                    else:
+                        items.append(ft.PopupMenuItem(text=item['label'], on_click=lambda _, cmd=item.get('command'): cmd() if cmd else None))
+                return items
+
+            # Study Menu
+            study_items_config = [
                 {'label': 'Quick Start', 'submenu': [
                     {'label': 'Top 50 Words', 'command': menu_callbacks.get('start_50')},
                     {'label': 'Top 100 Words', 'command': menu_callbacks.get('start_100')},
@@ -698,490 +264,351 @@ class UIBuilder:
                 {'label': 'Random 10 Words', 'command': menu_callbacks.get('random_10')},
             ]
             
-            widgets['nav_study'] = DropdownMenuButton(
-                nav_buttons_frame, "Study", self.theme, study_items
+            widgets['nav_study'] = ft.PopupMenuButton(
+                content=ft.Text("Study ▼", color=self.theme['nav_btn_fg']),
+                items=build_menu_items(study_items_config),
             )
-            widgets['nav_study'].pack(side=tk.LEFT, padx=UIConfig.NAV_BUTTON_SPACING)
-            
-            # Build Settings menu items
-            settings_items = []
-            if checkbox_vars:
-                settings_items = [
-                    {'label': 'Show Variants', 'variable': checkbox_vars.get('show_variants'), 
-                     'command': menu_callbacks.get('toggle_variants')},
-                    {'label': 'Show Translations', 'variable': checkbox_vars.get('show_translations'),
-                     'command': menu_callbacks.get('toggle_translations')},
-                    {'separator': True},
-                    {'label': 'Auto-play Audio', 'variable': checkbox_vars.get('auto_play'),
-                     'command': menu_callbacks.get('toggle_auto_play')},
-                    {'separator': True},
-                    {'label': 'Toggle Dark Mode', 'command': callbacks['toggle_theme']},
-                    {'separator': True},
-                    {'label': 'Reset Progress', 'command': menu_callbacks.get('reset_progress')},
-                ]
-            else:
-                settings_items = [
-                    {'label': 'Toggle Dark Mode', 'command': callbacks['toggle_theme']},
-                ]
-            
-            widgets['nav_settings'] = DropdownMenuButton(
-                nav_buttons_frame, "Settings", self.theme, settings_items
+
+            # Settings Menu
+            settings_items_config = [
+                {'label': 'Show Variants', 'variable': True, 'command': menu_callbacks.get('toggle_variants')},
+                {'label': 'Show Translations', 'variable': True, 'command': menu_callbacks.get('toggle_translations')},
+                {'separator': True},
+                {'label': 'Auto-play Audio', 'variable': True, 'command': menu_callbacks.get('toggle_auto_play')},
+                {'separator': True},
+                {'label': 'Toggle Dark Mode', 'command': callbacks['toggle_theme']},
+                {'separator': True},
+                {'label': 'Reset Progress', 'command': menu_callbacks.get('reset_progress')},
+            ]
+            widgets['nav_settings'] = ft.PopupMenuButton(
+                content=ft.Text("Settings ▼", color=self.theme['nav_btn_fg']),
+                items=build_menu_items(settings_items_config),
             )
-            widgets['nav_settings'].pack(side=tk.LEFT, padx=UIConfig.NAV_BUTTON_SPACING)
-            
-            # Build Vocabulary menu items
-            vocab_items = [
+
+            # Vocabulary Menu
+            vocab_items_config = [
                 {'label': 'View Statistics', 'command': menu_callbacks.get('show_statistics')},
             ]
-            
-            widgets['nav_vocabulary'] = DropdownMenuButton(
-                nav_buttons_frame, "Vocabulary", self.theme, vocab_items
+            widgets['nav_vocabulary'] = ft.PopupMenuButton(
+                content=ft.Text("Vocabulary ▼", color=self.theme['nav_btn_fg']),
+                items=build_menu_items(vocab_items_config),
             )
-            widgets['nav_vocabulary'].pack(side=tk.LEFT, padx=UIConfig.NAV_BUTTON_SPACING)
-            
-            # Build Help menu items
-            help_items = [
+
+            # Help Menu
+            help_items_config = [
                 {'label': 'About', 'command': menu_callbacks.get('show_about')},
             ]
-            
-            widgets['nav_help'] = DropdownMenuButton(
-                nav_buttons_frame, "Help", self.theme, help_items
+            widgets['nav_help'] = ft.PopupMenuButton(
+                content=ft.Text("Help ▼", color=self.theme['nav_btn_fg']),
+                items=build_menu_items(help_items_config),
             )
-            widgets['nav_help'].pack(side=tk.LEFT, padx=UIConfig.NAV_BUTTON_SPACING)
+
+            widgets['nav_bar'] = ft.Container(
+                content=ft.Row(
+                    controls=[
+                        widgets['nav_study'],
+                        widgets['nav_settings'],
+                        widgets['nav_vocabulary'],
+                        widgets['nav_help']
+                    ],
+                    spacing=10
+                ),
+                bgcolor=self.theme['nav_bg'],
+                padding=10,
+            )
+
+        # ===== TOP BAR =====
+        widgets['title_label'] = ft.Text(
+            value="Hebrew Learning App",
+            font_family=UIConfig.TITLE_FONT_FAMILY,
+            size=UIConfig.TITLE_FONT_SIZE,
+            weight=UIConfig.TITLE_FONT_WEIGHT,
+            color=self.theme['text_fg']
+        )
         
-        # ===== TOP BAR WITH TITLE AND THEME TOGGLE =====
-        top_bar = tk.Frame(self.root, bg=self.theme['bg'])
-        top_bar.pack(
-            pady=UIConfig.WINDOW_TOP_PADDING, 
-            fill=tk.X, 
-            padx=UIConfig.WINDOW_SIDE_PADDING
+        widgets['progress_label'] = ft.Text(
+            value="",
+            font_family=UIConfig.LABEL_FONT_FAMILY,
+            size=UIConfig.LABEL_FONT_SIZE,
+            weight=UIConfig.LABEL_FONT_WEIGHT,
+            color=self.theme['label_fg']
+        )
+        
+        widgets['stats_label'] = ft.Text(
+            value="",
+            font_family=UIConfig.LABEL_FONT_FAMILY,
+            size=UIConfig.LABEL_FONT_SIZE,
+            weight=UIConfig.LABEL_FONT_WEIGHT,
+            color=self.theme['label_fg']
+        )
+        
+        widgets['theme_toggle_btn'] = ft.IconButton(
+            icon=ft.Icons.DARK_MODE if self.theme == Themes.LIGHT else ft.Icons.LIGHT_MODE,
+            on_click=lambda _: callbacks['toggle_theme'](),
+            icon_color=self.theme['text_fg']
+        )
+
+        top_bar = ft.Row(
+            controls=[
+                ft.Column(
+                    controls=[
+                        widgets['title_label'],
+                        widgets['progress_label'],
+                        widgets['stats_label']
+                    ],
+                    spacing=5
+                ),
+                widgets['theme_toggle_btn']
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
         widgets['top_bar'] = top_bar
-        
-        # Title frame (left side)
-        title_frame = tk.Frame(top_bar, bg=self.theme['bg'])
-        title_frame.pack(side=tk.LEFT)
-        widgets['title_frame'] = title_frame
-        
-        # Main title
-        widgets['title_label'] = self.create_label(
-            title_frame,
-            text="Hebrew Learning App",
-            font=UIConfig.get_title_font(),
-            bg=self.theme['bg'],
-            fg=self.theme['text_fg']
-        )
-        widgets['title_label'].pack()
-        
-        # Progress label
-        widgets['progress_label'] = self.create_label(
-            title_frame,
-            text="",
-            font=UIConfig.get_label_font(),
-            bg=self.theme['bg'],
-            fg=self.theme['label_fg']
-        )
-        widgets['progress_label'].pack()
-        
-        # Stats label
-        widgets['stats_label'] = self.create_label(
-            title_frame,
-            text="",
-            font=UIConfig.get_label_font(),
-            bg=self.theme['bg'],
-            fg=self.theme['label_fg']
-        )
-        widgets['stats_label'].pack(pady=UIConfig.TITLE_BOTTOM_PADDING)
-        
-        # Theme toggle button (right side)
-        theme_frame = tk.Frame(top_bar, bg=self.theme['bg'])
-        theme_frame.pack(side=tk.RIGHT)
-        widgets['theme_frame'] = theme_frame
-        
-        widgets['theme_toggle_btn'] = self.create_button(
-            theme_frame,
-            "🌙",  # Will be updated based on dark_mode
-            callbacks['toggle_theme'],
-            self.theme['btn_audio'],
-            font_size=UIConfig.THEME_BUTTON_FONT_SIZE,
-            padx=UIConfig.THEME_BUTTON_PADX,
-            pady=UIConfig.THEME_BUTTON_PADY
-        )
-        widgets['theme_toggle_btn'].pack()
-        
-        # ===== MAIN CARD FRAME =====
-        widgets['card_frame'] = self.create_card_frame()
-        
+
         # ===== TEXT DISPLAY WIDGETS =====
-        # Hebrew text
-        widgets['hebrew_text'] = self.create_text_widget(
-            widgets['card_frame'],
-            UIConfig.TEXT_BOX_HEIGHT,
-            UIConfig.get_hebrew_font(),
-            self.theme['text_bg'],
-            self.theme['text_fg']
+        widgets['hebrew_container'], widgets['hebrew_text'] = self.create_text_widget(
+            UIConfig.HEBREW_FONT_FAMILY, UIConfig.HEBREW_FONT_SIZE, UIConfig.HEBREW_FONT_WEIGHT,
+            self.theme['text_bg'], self.theme['text_fg'], height=80
         )
         
-        # Transliteration text
-        widgets['trans_text'] = self.create_text_widget(
-            widgets['card_frame'],
-            UIConfig.TEXT_BOX_HEIGHT,
-            UIConfig.get_trans_font(),
-            self.theme['trans_bg'],
-            self.theme['trans_fg']
+        widgets['trans_container'], widgets['trans_text'] = self.create_text_widget(
+            UIConfig.TRANS_FONT_FAMILY, UIConfig.TRANS_FONT_SIZE, UIConfig.TRANS_FONT_WEIGHT,
+            self.theme['trans_bg'], self.theme['trans_fg'], height=60
         )
         
-        # English text
-        widgets['english_text'] = self.create_text_widget(
-            widgets['card_frame'],
-            UIConfig.TEXT_BOX_HEIGHT,
-            UIConfig.get_english_font(),
-            self.theme['english_bg'],
-            self.theme['english_fg']
+        widgets['english_container'], widgets['english_text'] = self.create_text_widget(
+            UIConfig.ENGLISH_FONT_FAMILY, UIConfig.ENGLISH_FONT_SIZE, UIConfig.ENGLISH_FONT_WEIGHT,
+            self.theme['english_bg'], self.theme['english_fg'], height=60
         )
-        
-        # ===== EXTRA INFO BOX (ROOT, NOTES, VARIANTS, TRANSLATIONS) =====
-        info_container = self._create_rounded_frame(
-            widgets['card_frame'],
-            self.theme['info_bg'],
-            radius=UIConfig.TEXT_BOX_BORDER_RADIUS
+
+        # ===== INFO BOX =====
+        widgets['root_text'] = ft.Text("", color=self.theme['info_fg'], size=12)
+        widgets['notes_text'] = ft.Text("", color=self.theme['info_fg'], size=12, italic=True)
+        widgets['variants_text'] = ft.Text("", color=self.theme['info_fg'], size=12)
+        widgets['translations_text'] = ft.Text("", color=self.theme['info_fg'], size=12)
+
+        widgets['info_container'] = ft.Container(
+            content=ft.Column(
+                controls=[
+                    widgets['root_text'],
+                    widgets['notes_text'],
+                    widgets['variants_text'],
+                    widgets['translations_text']
+                ],
+                spacing=2
+            ),
+            bgcolor=self.theme['info_bg'],
+            border_radius=UIConfig.TEXT_BOX_BORDER_RADIUS,
+            padding=10,
+            width=float('inf')
         )
-        info_container.pack(
-            fill=tk.BOTH,
-            expand=False,
-            pady=UIConfig.TEXT_BOX_VERTICAL_SPACING,
-            padx=UIConfig.TEXT_BOX_HORIZONTAL_PADDING
+
+        # ===== CARD FRAME =====
+        widgets['card_frame'] = ft.Container(
+            content=ft.Column(
+                controls=[
+                    widgets['hebrew_container'],
+                    widgets['trans_container'],
+                    widgets['english_container'],
+                    widgets['info_container']
+                ],
+                spacing=10
+            ),
+            bgcolor=self.theme['card_bg'],
+            border_radius=UIConfig.CARD_BORDER_RADIUS,
+            padding=20,
+            alignment=ft.alignment.center
         )
-        info_container.config(height=UIConfig.INFO_BOX_HEIGHT)
-        info_container.pack_propagate(False)
-        
-        info_inner = tk.Frame(info_container, bg=self.theme['info_bg'])
-        info_inner.place(
-            relx=0.5, rely=0.5, anchor=tk.CENTER,
-            relwidth=UIConfig.TEXT_BOX_INNER_REL_WIDTH,
-            relheight=UIConfig.TEXT_BOX_INNER_REL_HEIGHT
-        )
-        
-        # Create info labels with consistent configuration
-        info_labels = [
-            ('root_text', 'normal'),
-            ('notes_text', 'italic'),
-            ('variants_text', 'normal'),
-            ('translations_text', 'normal')
-        ]
-        
-        for label_name, weight in info_labels:
-            widgets[label_name] = self.create_label(
-                info_inner,
-                text="",
-                font=(UIConfig.TRANS_FONT_FAMILY, 12, weight),
-                bg=self.theme['info_bg'],
-                fg=self.theme['info_fg'],
-                anchor='w',
-                justify=tk.LEFT,
-                wraplength=UIConfig.INFO_BOX_WRAP_LENGTH
-            )
-            widgets[label_name].pack(
-                fill=tk.X,
-                padx=UIConfig.INFO_BOX_PADDING,
-                pady=UIConfig.INFO_BOX_LABEL_PADY,
-                anchor='w'
-            )
-        
-        # Store info container for theme updates
-        widgets['info_container'] = info_container
-        widgets['info_inner'] = info_inner
-        
-        # ===== CONTROL BUTTONS (AUDIO & SHOW ANSWER) =====
-        button_frame = tk.Frame(self.root, bg=self.theme['bg'])
-        button_frame.pack(pady=UIConfig.BUTTON_FRAME_PADY)
-        widgets['button_frame'] = button_frame
-        
+
+        # ===== CONTROL BUTTONS =====
         widgets['audio_btn'] = self.create_button(
-            button_frame,
-            "🔊 Play Audio",
-            callbacks['play_audio'],
-            self.theme['btn_audio'],
-            padx=UIConfig.MAIN_BUTTON_PADX,
-            pady=UIConfig.MAIN_BUTTON_PADY,
-            font_size=UIConfig.MAIN_BUTTON_FONT_SIZE
-        )
-        widgets['audio_btn'].grid(
-            row=0, column=0,
-            padx=UIConfig.MAIN_BUTTON_SPACING,
-            pady=UIConfig.MAIN_BUTTON_ROW_SPACING
+            "🔊 Play Audio", callbacks['play_audio'], self.theme['btn_audio']
         )
         
         widgets['show_answer_btn'] = self.create_button(
-            button_frame,
-            "👁 Show Answer",
-            callbacks['show_answer'],
-            self.theme['btn_answer'],
-            padx=UIConfig.MAIN_BUTTON_PADX,
-            pady=UIConfig.MAIN_BUTTON_PADY,
-            font_size=UIConfig.MAIN_BUTTON_FONT_SIZE
+            "👁 Show Answer", callbacks['show_answer'], self.theme['btn_answer']
         )
-        widgets['show_answer_btn'].grid(
-            row=0, column=1,
-            padx=UIConfig.MAIN_BUTTON_SPACING,
-            pady=UIConfig.MAIN_BUTTON_ROW_SPACING
+
+        widgets['button_frame'] = ft.Row(
+            controls=[widgets['audio_btn'], widgets['show_answer_btn']],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=20
         )
-        
-        # ===== RESPONSE BUTTONS (AGAIN, HARD, GOOD, EASY) =====
-        response_frame = tk.Frame(self.root, bg=self.theme['bg'])
-        response_frame.pack(pady=UIConfig.RESPONSE_FRAME_PADY)
-        widgets['response_frame'] = response_frame
-        
-        widgets['again_btn'] = self.create_button(
-            response_frame,
-            "Again (1)",
-            callbacks['mark_again'],
-            self.theme['btn_again'],
-            font_size=UIConfig.RESPONSE_BUTTON_FONT_SIZE,
-            padx=UIConfig.RESPONSE_BUTTON_PADX,
-            pady=UIConfig.RESPONSE_BUTTON_PADY
+
+        # ===== RESPONSE BUTTONS =====
+        widgets['again_btn'] = self.create_button("Again (1)", callbacks['mark_again'], self.theme['btn_again'])
+        widgets['hard_btn'] = self.create_button("Hard (2)", callbacks['mark_hard'], self.theme['btn_hard'])
+        widgets['good_btn'] = self.create_button("Good (3)", callbacks['mark_good'], self.theme['btn_good'])
+        widgets['easy_btn'] = self.create_button("Easy (4)", callbacks['mark_easy'], self.theme['btn_easy'])
+
+        widgets['response_frame'] = ft.Row(
+            controls=[
+                widgets['again_btn'],
+                widgets['hard_btn'],
+                widgets['good_btn'],
+                widgets['easy_btn']
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=10
         )
-        widgets['again_btn'].grid(
-            row=0, column=0,
-            padx=UIConfig.RESPONSE_BUTTON_SPACING,
-            pady=UIConfig.RESPONSE_BUTTON_ROW_SPACING
+
+        # ===== KEYBOARD HINT =====
+        widgets['keyboard_hint'] = ft.Text(
+            "Keyboard: 1=Again  2=Hard  3=Good  4=Easy  |  Space=Show  P=Audio",
+            font_family=UIConfig.HINT_FONT_FAMILY,
+            size=UIConfig.HINT_FONT_SIZE,
+            color=self.theme['hint_fg'],
+            italic=True,
+            text_align=ft.TextAlign.CENTER
         )
-        
-        widgets['hard_btn'] = self.create_button(
-            response_frame,
-            "Hard (2)",
-            callbacks['mark_hard'],
-            self.theme['btn_hard'],
-            font_size=UIConfig.RESPONSE_BUTTON_FONT_SIZE,
-            padx=UIConfig.RESPONSE_BUTTON_PADX,
-            pady=UIConfig.RESPONSE_BUTTON_PADY
-        )
-        widgets['hard_btn'].grid(
-            row=0, column=1,
-            padx=UIConfig.RESPONSE_BUTTON_SPACING,
-            pady=UIConfig.RESPONSE_BUTTON_ROW_SPACING
-        )
-        
-        widgets['good_btn'] = self.create_button(
-            response_frame,
-            "Good (3)",
-            callbacks['mark_good'],
-            self.theme['btn_good'],
-            font_size=UIConfig.RESPONSE_BUTTON_FONT_SIZE,
-            padx=UIConfig.RESPONSE_BUTTON_PADX,
-            pady=UIConfig.RESPONSE_BUTTON_PADY
-        )
-        widgets['good_btn'].grid(
-            row=0, column=2,
-            padx=UIConfig.RESPONSE_BUTTON_SPACING,
-            pady=UIConfig.RESPONSE_BUTTON_ROW_SPACING
-        )
-        
-        widgets['easy_btn'] = self.create_button(
-            response_frame,
-            "Easy (4)",
-            callbacks['mark_easy'],
-            self.theme['btn_easy'],
-            font_size=UIConfig.RESPONSE_BUTTON_FONT_SIZE,
-            padx=UIConfig.RESPONSE_BUTTON_PADX,
-            pady=UIConfig.RESPONSE_BUTTON_PADY
-        )
-        widgets['easy_btn'].grid(
-            row=0, column=3,
-            padx=UIConfig.RESPONSE_BUTTON_SPACING,
-            pady=UIConfig.RESPONSE_BUTTON_ROW_SPACING
-        )
-        
-        # ===== KEYBOARD SHORTCUTS HINT =====
-        widgets['keyboard_hint'] = self.create_label(
-            response_frame,
-            text="Keyboard: 1=Again  2=Hard  3=Good  4=Easy  |  Space=Show  P=Audio",
-            font=UIConfig.get_hint_font(),
-            bg=self.theme['bg'],
-            fg=self.theme['hint_fg']
-        )
-        widgets['keyboard_hint'].grid(
-            row=1, column=0, columnspan=4,
-            pady=(UIConfig.KEYBOARD_HINT_TOP_PADDING, 0)
+
+        # ===== MAIN LAYOUT =====
+        self.page.add(
+            widgets['nav_bar'],
+            ft.Container(
+                content=ft.Column(
+                    controls=[
+                        widgets['top_bar'],
+                        widgets['card_frame'],
+                        widgets['button_frame'],
+                        widgets['response_frame'],
+                        widgets['keyboard_hint']
+                    ],
+                    spacing=15,
+                    scroll=ft.ScrollMode.AUTO
+                ),
+                padding=UIConfig.WINDOW_PADDING,
+                expand=True
+            )
         )
         
         return widgets
-    
+
     def apply_theme(self, widgets, theme):
-        """Apply theme to all widgets in correct order to avoid incomplete updates"""
-        # Store new theme reference
+        """Apply theme to all widgets"""
         self.theme = theme
+        self.page.bgcolor = theme['bg']
         
-        # PHASE 0: Update navigation bar
+        # Update Nav Bar
         if 'nav_bar' in widgets:
-            widgets['nav_bar'].config(bg=theme['nav_bg'])
-        if 'nav_buttons_frame' in widgets:
-            widgets['nav_buttons_frame'].config(bg=theme['nav_bg'])
+            widgets['nav_bar'].bgcolor = theme['nav_bg']
+            # Update nav buttons text color if possible, or recreate them
+            # Flet controls update automatically if we change their properties
+            for nav_key in ['nav_study', 'nav_settings', 'nav_vocabulary', 'nav_help']:
+                if nav_key in widgets:
+                    widgets[nav_key].content.color = theme['nav_btn_fg']
+
+        # Update Top Bar
+        if 'title_label' in widgets: widgets['title_label'].color = theme['text_fg']
+        if 'progress_label' in widgets: widgets['progress_label'].color = theme['label_fg']
+        if 'stats_label' in widgets: widgets['stats_label'].color = theme['label_fg']
+        if 'theme_toggle_btn' in widgets:
+            widgets['theme_toggle_btn'].icon = ft.Icons.DARK_MODE if theme == Themes.LIGHT else ft.Icons.LIGHT_MODE
+            widgets['theme_toggle_btn'].icon_color = theme['text_fg']
+
+        # Update Card Frame
+        if 'card_frame' in widgets: widgets['card_frame'].bgcolor = theme['card_bg']
         
-        # Update navigation dropdown buttons
-        nav_buttons = ['nav_study', 'nav_settings', 'nav_vocabulary', 'nav_help']
-        for nav_name in nav_buttons:
-            if nav_name in widgets:
-                widgets[nav_name].update_theme(theme)
+        # Update Text Containers
+        if 'hebrew_container' in widgets: widgets['hebrew_container'].bgcolor = theme['text_bg']
+        if 'hebrew_text' in widgets: widgets['hebrew_text'].color = theme['text_fg']
         
-        # PHASE 1: Update root and all plain frames first (they are parents of other widgets)
-        self.root.config(bg=theme['bg'])
+        if 'trans_container' in widgets: widgets['trans_container'].bgcolor = theme['trans_bg']
+        if 'trans_text' in widgets: widgets['trans_text'].color = theme['trans_fg']
         
-        plain_frames = ['top_bar', 'title_frame', 'theme_frame', 'button_frame', 'response_frame']
-        for frame_name in plain_frames:
-            if frame_name in widgets:
-                widgets[frame_name].config(bg=theme['bg'])
+        if 'english_container' in widgets: widgets['english_container'].bgcolor = theme['english_bg']
+        if 'english_text' in widgets: widgets['english_text'].color = theme['english_fg']
         
-        # PHASE 2: Update card frame container and inner frame
-        if 'card_frame' in widgets:
-            card_frame = widgets['card_frame']
-            card_frame.config(bg=theme['card_bg'])
-            if hasattr(card_frame, '_parent'):
-                container = card_frame._parent
-                container._bg_color = theme['card_bg']
-                container.config(bg=theme['card_bg'])
+        # Update Info Box
+        if 'info_container' in widgets: widgets['info_container'].bgcolor = theme['info_bg']
+        for key in ['root_text', 'notes_text', 'variants_text', 'translations_text']:
+            if key in widgets: widgets[key].color = theme['info_fg']
+            
+        # Update Buttons
+        btn_map = {
+            'audio_btn': 'btn_audio',
+            'show_answer_btn': 'btn_answer',
+            'again_btn': 'btn_again',
+            'hard_btn': 'btn_hard',
+            'good_btn': 'btn_good',
+            'easy_btn': 'btn_easy'
+        }
+        for btn_key, color_key in btn_map.items():
+            if btn_key in widgets:
+                widgets[btn_key].style.bgcolor = theme[color_key]
+                
+        # Update Hint
+        if 'keyboard_hint' in widgets: widgets['keyboard_hint'].color = theme['hint_fg']
         
-        # PHASE 3: Update info container and inner frame
-        if 'info_container' in widgets:
-            widgets['info_container']._bg_color = theme['info_bg']
-            widgets['info_container'].config(bg=theme['info_bg'])
-        if 'info_inner' in widgets:
-            widgets['info_inner'].config(bg=theme['info_bg'])
-        
-        # PHASE 4: Update all text widget containers (before triggering canvas redraws)
-        text_configs = [
-            ('hebrew_text', 'text_bg', 'text_fg'),
-            ('trans_text', 'trans_bg', 'trans_fg'),
-            ('english_text', 'english_bg', 'english_fg')
-        ]
-        for widget_name, bg_key, fg_key in text_configs:
-            if widget_name in widgets:
-                text_widget = widgets[widget_name]
-                text_widget.config(bg=theme[bg_key], fg=theme[fg_key])
-                if hasattr(text_widget, '_rounded_container'):
-                    container = text_widget._rounded_container
-                    container._bg_color = theme[bg_key]
-                    container.config(bg=theme[bg_key])
-        
-        # PHASE 5: Update all labels
-        label_configs = [
-            ('title_label', 'bg', 'text_fg'),
-            ('progress_label', 'bg', 'label_fg'),
-            ('stats_label', 'bg', 'label_fg'),
-            ('keyboard_hint', 'bg', 'hint_fg'),
-            ('root_text', 'info_bg', 'info_fg'),
-            ('notes_text', 'info_bg', 'info_fg'),
-            ('variants_text', 'info_bg', 'info_fg'),
-            ('translations_text', 'info_bg', 'info_fg')
-        ]
-        for label_name, bg_key, fg_key in label_configs:
-            if label_name in widgets:
-                widgets[label_name].config(bg=theme[bg_key], fg=theme[fg_key])
-        
-        # PHASE 6: Update all buttons
-        button_configs = [
-            ('audio_btn', 'btn_audio'),
-            ('show_answer_btn', 'btn_answer'),
-            ('again_btn', 'btn_again'),
-            ('hard_btn', 'btn_hard'),
-            ('good_btn', 'btn_good'),
-            ('easy_btn', 'btn_easy'),
-            ('theme_toggle_btn', 'btn_audio')
-        ]
-        for btn_name, color_key in button_configs:
-            if btn_name in widgets:
-                btn = widgets[btn_name]
-                btn._bg_color = theme[color_key]
-                if hasattr(btn, '_draw_button'):
-                    btn._draw_button()
-        
-        # PHASE 7: Now trigger all canvas redraws AFTER parent backgrounds are set
-        # This ensures the canvas picks up the correct parent background color
-        self.root.update_idletasks()  # Process pending geometry changes
-        
-        # Redraw card container canvas
-        if 'card_frame' in widgets and hasattr(widgets['card_frame'], '_parent'):
-            container = widgets['card_frame']._parent
-            if hasattr(container, '_canvas'):
-                container._canvas.event_generate('<Configure>')
-        
-        # Redraw info container canvas
-        if 'info_container' in widgets and hasattr(widgets['info_container'], '_canvas'):
-            widgets['info_container']._canvas.event_generate('<Configure>')
-        
-        # Redraw text widget container canvases
-        for widget_name, _, _ in text_configs:
-            if widget_name in widgets:
-                text_widget = widgets[widget_name]
-                if hasattr(text_widget, '_rounded_container'):
-                    container = text_widget._rounded_container
-                    if hasattr(container, '_canvas'):
-                        container._canvas.event_generate('<Configure>')
+        self.page.update()
 
 class DialogHelper:
     """Helper for creating dialogs"""
     
     @staticmethod
-    def show_custom_range_dialog(root, callback):
+    def show_custom_range_dialog(page, callback):
         """Show dialog for custom rank range selection"""
-        dialog = tk.Toplevel(root)
-        dialog.title("Custom Range")
-        dialog.geometry(UIConfig.CUSTOM_RANGE_DIALOG_GEOMETRY)
-        dialog.transient(root)
-        dialog.grab_set()
+        start_field = ft.TextField(label="From rank", value="1", width=100)
+        end_field = ft.TextField(label="To rank", value="100", width=100)
         
-        tk.Label(dialog, text="Select rank range:", font=('Helvetica', 12, 'bold')).pack(pady=10)
-        
-        frame = tk.Frame(dialog)
-        frame.pack(pady=10)
-        
-        tk.Label(frame, text="From rank:").grid(row=0, column=0, padx=5, pady=5)
-        start_entry = tk.Entry(frame, width=10)
-        start_entry.grid(row=0, column=1, padx=5, pady=5)
-        start_entry.insert(0, "1")
-        
-        tk.Label(frame, text="To rank:").grid(row=1, column=0, padx=5, pady=5)
-        end_entry = tk.Entry(frame, width=10)
-        end_entry.grid(row=1, column=1, padx=5, pady=5)
-        end_entry.insert(0, "100")
-        
-        def on_ok():
+        dlg = ft.AlertDialog(
+            title=ft.Text("Custom Range"),
+            content=ft.Column([
+                ft.Text("Select rank range:"),
+                ft.Row([start_field, end_field])
+            ], height=100),
+        )
+
+        def close_dlg(e):
+            page.close(dlg)
+
+        def on_ok(e):
             try:
-                start = int(start_entry.get())
-                end = int(end_entry.get())
+                start = int(start_field.value)
+                end = int(end_field.value)
                 if start > 0 and end >= start:
-                    dialog.destroy()
+                    page.close(dlg)
                     callback(start, end)
                 else:
-                    messagebox.showerror("Invalid Range", "Please enter valid rank numbers.")
+                    page.open(ft.SnackBar(ft.Text("Please enter valid rank numbers.")))
             except ValueError:
-                messagebox.showerror("Invalid Input", "Please enter numbers only.")
+                page.open(ft.SnackBar(ft.Text("Please enter numbers only.")))
+
+        dlg.actions = [
+            ft.TextButton("Cancel", on_click=close_dlg),
+            ft.TextButton("Start Session", on_click=on_ok),
+        ]
         
-        tk.Button(dialog, text="Start Session", command=on_ok, bg='#2196f3', fg='white', padx=20, pady=10).pack(pady=10)
+        page.open(dlg)
     
     @staticmethod
-    def show_about_dialog(vocabulary_count):
+    def show_about_dialog(page, vocabulary_count):
         """Show about dialog"""
-        messagebox.showinfo(
-            "About",
-            f"Hebrew Learning App\n"
-            f"Version 2.5\n\n"
-            f"Learn Hebrew vocabulary with flashcards\n"
-            f"and audio pronunciation.\n\n"
-            f"Total vocabulary: {vocabulary_count} words\n\n"
-            f"Confidence-Based Learning:\n"
-            f"Rate each word honestly for better results!\n\n"
-            f"Keyboard Shortcuts:\n"
-            f"1 or A - Again (complete failure)\n"
-            f"2 or H - Hard (difficult recall)\n"
-            f"3 or G - Good (recalled with effort)\n"
-            f"4 or E - Easy (perfect recall)\n\n"
-            f"Space - Show Answer\n"
-            f"P - Play Audio"
+        dlg = ft.AlertDialog(
+            title=ft.Text("About"),
+            content=ft.Text(
+                f"Hebrew Learning App\n"
+                f"Version 2.5\n\n"
+                f"Learn Hebrew vocabulary with flashcards\n"
+                f"and audio pronunciation.\n\n"
+                f"Total vocabulary: {vocabulary_count} words\n\n"
+                f"Confidence-Based Learning:\n"
+                f"Rate each word honestly for better results!\n\n"
+                f"Keyboard Shortcuts:\n"
+                f"1 or A - Again (complete failure)\n"
+                f"2 or H - Hard (difficult recall)\n"
+                f"3 or G - Good (recalled with effort)\n"
+                f"4 or E - Easy (perfect recall)\n\n"
+                f"Space - Show Answer\n"
+                f"P - Play Audio"
+            ),
         )
+        dlg.actions = [
+            ft.TextButton("OK", on_click=lambda e: page.close(dlg))
+        ]
+        page.open(dlg)
     
     @staticmethod
-    def show_statistics(vocabulary_count, progress):
+    def show_statistics(page, vocabulary_count, progress):
         """Show vocabulary statistics"""
         # Handle new database format (integers) or old format (lists)
         if isinstance(progress.get('easy'), int):
@@ -1209,14 +636,20 @@ class DialogHelper:
         else:
             confidence_text = ""
         
-        messagebox.showinfo(
-            "Vocabulary Statistics",
-            f"Total Words: {vocabulary_count}\n\n"
-            f"Confidence Levels:\n"
-            f"  Easy (Mastered): {easy} ({easy/vocabulary_count*100:.1f}%)\n"
-            f"  Good (Confident): {good} ({good/vocabulary_count*100:.1f}%)\n"
-            f"  Hard (Struggling): {hard} ({hard/vocabulary_count*100:.1f}%)\n"
-            f"  Again (Need Review): {again} ({again/vocabulary_count*100:.1f}%)\n\n"
-            f"Not Studied Yet: {not_studied} ({not_studied/vocabulary_count*100:.1f}%)"
-            f"{confidence_text}"
+        dlg = ft.AlertDialog(
+            title=ft.Text("Vocabulary Statistics"),
+            content=ft.Text(
+                f"Total Words: {vocabulary_count}\n\n"
+                f"Confidence Levels:\n"
+                f"  Easy (Mastered): {easy} ({easy/vocabulary_count*100:.1f}%)\n"
+                f"  Good (Confident): {good} ({good/vocabulary_count*100:.1f}%)\n"
+                f"  Hard (Struggling): {hard} ({hard/vocabulary_count*100:.1f}%)\n"
+                f"  Again (Need Review): {again} ({again/vocabulary_count*100:.1f}%)\n\n"
+                f"Not Studied Yet: {not_studied} ({not_studied/vocabulary_count*100:.1f}%)"
+                f"{confidence_text}"
+            ),
         )
+        dlg.actions = [
+            ft.TextButton("OK", on_click=lambda e: page.close(dlg))
+        ]
+        page.open(dlg)

@@ -22,7 +22,7 @@ class Config:
     # File names
     VOCAB_FILE = 'hebrew_vocabulary.csv'
     PROGRESS_FILE = 'learning_progress.json'
-    ICON_FILE = 'HebrewLearning.icns'
+    ICON_FILE = 'icon.png'
     USER_DIR = '.hebrew_learning'
     
     @staticmethod

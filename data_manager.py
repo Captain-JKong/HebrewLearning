@@ -68,5 +68,7 @@ class ProgressManager:
                 return self.db.update_progress(lemma_id, familiarity)
             return 2.5
         except Exception as e:
+            import traceback
             print(f"Error marking word: {e}")
+            traceback.print_exc()
             return 2.5
