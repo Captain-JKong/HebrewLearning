@@ -704,119 +704,103 @@ class UIBuilder:
         return widgets
     
     def apply_theme(self, widgets, theme):
-        """Apply theme to widgets"""
+        """Apply theme to all widgets in correct order to avoid incomplete updates"""
+        # Store new theme reference
+        self.theme = theme
+        
+        # PHASE 1: Update root and all plain frames first (they are parents of other widgets)
         self.root.config(bg=theme['bg'])
         
-        # Update frames
-        for frame_name in ['top_bar', 'title_frame', 'theme_frame', 'button_frame', 'response_frame']:
+        plain_frames = ['top_bar', 'title_frame', 'theme_frame', 'button_frame', 'response_frame']
+        for frame_name in plain_frames:
             if frame_name in widgets:
                 widgets[frame_name].config(bg=theme['bg'])
         
-        # Update labels
-        label_mappings = [
-            ('title_label', theme['text_fg']),
-            ('progress_label', theme['label_fg']),
-            ('stats_label', theme['label_fg']),
-            ('keyboard_hint', theme['hint_fg'])
-        ]
-        
-        for label_name, fg_color in label_mappings:
-            if label_name in widgets:
-                widgets[label_name].config(bg=theme['bg'], fg=fg_color)
-        
-        # Update card frame
+        # PHASE 2: Update card frame container and inner frame
         if 'card_frame' in widgets:
             card_frame = widgets['card_frame']
             card_frame.config(bg=theme['card_bg'])
-            # Update the canvas background for rounded corners
-            if hasattr(card_frame, '_parent') and hasattr(card_frame._parent, '_canvas'):
+            if hasattr(card_frame, '_parent'):
                 container = card_frame._parent
-                # Update stored color
                 container._bg_color = theme['card_bg']
                 container.config(bg=theme['card_bg'])
-                
-                # Trigger redraw using the stored draw function
-                canvas = container._canvas
-                canvas.event_generate('<Configure>')
         
-        # Update text widgets and their rounded containers
-        text_widget_mappings = [
+        # PHASE 3: Update info container and inner frame
+        if 'info_container' in widgets:
+            widgets['info_container']._bg_color = theme['info_bg']
+            widgets['info_container'].config(bg=theme['info_bg'])
+        if 'info_inner' in widgets:
+            widgets['info_inner'].config(bg=theme['info_bg'])
+        
+        # PHASE 4: Update all text widget containers (before triggering canvas redraws)
+        text_configs = [
             ('hebrew_text', 'text_bg', 'text_fg'),
             ('trans_text', 'trans_bg', 'trans_fg'),
             ('english_text', 'english_bg', 'english_fg')
         ]
-        
-        for widget_name, bg_key, fg_key in text_widget_mappings:
+        for widget_name, bg_key, fg_key in text_configs:
             if widget_name in widgets:
                 text_widget = widgets[widget_name]
-                new_bg = theme[bg_key]
-                new_fg = theme[fg_key]
-                
-                # Update text widget
-                text_widget.config(bg=new_bg, fg=new_fg)
-                
-                # Update rounded container canvas background
+                text_widget.config(bg=theme[bg_key], fg=theme[fg_key])
                 if hasattr(text_widget, '_rounded_container'):
                     container = text_widget._rounded_container
-                    # Update stored color
-                    container._bg_color = new_bg
-                    container.config(bg=new_bg)
-                    
-                    # Trigger redraw using the stored draw function
-                    if hasattr(container, '_canvas'):
-                        canvas = container._canvas
-                        # Manually trigger the configure event to redraw
-                        canvas.event_generate('<Configure>')
+                    container._bg_color = theme[bg_key]
+                    container.config(bg=theme[bg_key])
         
-        # Update info box (fourth box with root, notes, variants, translations)
-        if 'info_container' in widgets and 'info_inner' in widgets:
-            # Update container
-            info_container = widgets['info_container']
-            info_container._bg_color = theme['info_bg']
-            info_container.config(bg=theme['info_bg'])
-            if hasattr(info_container, '_canvas'):
-                info_container._canvas.event_generate('<Configure>')
-            
-            # Update inner frame
-            widgets['info_inner'].config(bg=theme['info_bg'])
-            
-            # Update all info labels
-            for label_name in ['root_text', 'notes_text', 'variants_text', 'translations_text']:
-                if label_name in widgets:
-                    widgets[label_name].config(bg=theme['info_bg'], fg=theme['info_fg'])
+        # PHASE 5: Update all labels
+        label_configs = [
+            ('title_label', 'bg', 'text_fg'),
+            ('progress_label', 'bg', 'label_fg'),
+            ('stats_label', 'bg', 'label_fg'),
+            ('keyboard_hint', 'bg', 'hint_fg'),
+            ('root_text', 'info_bg', 'info_fg'),
+            ('notes_text', 'info_bg', 'info_fg'),
+            ('variants_text', 'info_bg', 'info_fg'),
+            ('translations_text', 'info_bg', 'info_fg')
+        ]
+        for label_name, bg_key, fg_key in label_configs:
+            if label_name in widgets:
+                widgets[label_name].config(bg=theme[bg_key], fg=theme[fg_key])
         
-        # Update buttons (now they are containers with canvas backgrounds)
-        button_mappings = [
+        # PHASE 6: Update all buttons
+        button_configs = [
             ('audio_btn', 'btn_audio'),
             ('show_answer_btn', 'btn_answer'),
             ('again_btn', 'btn_again'),
             ('hard_btn', 'btn_hard'),
             ('good_btn', 'btn_good'),
             ('easy_btn', 'btn_easy'),
-            ('theme_toggle_btn', 'btn_audio')  # Use same gray color
+            ('theme_toggle_btn', 'btn_audio')
         ]
+        for btn_name, color_key in button_configs:
+            if btn_name in widgets:
+                btn = widgets[btn_name]
+                btn._bg_color = theme[color_key]
+                if hasattr(btn, '_draw_button'):
+                    btn._draw_button()
         
-        for widget_name, theme_key in button_mappings:
+        # PHASE 7: Now trigger all canvas redraws AFTER parent backgrounds are set
+        # This ensures the canvas picks up the correct parent background color
+        self.root.update_idletasks()  # Process pending geometry changes
+        
+        # Redraw card container canvas
+        if 'card_frame' in widgets and hasattr(widgets['card_frame'], '_parent'):
+            container = widgets['card_frame']._parent
+            if hasattr(container, '_canvas'):
+                container._canvas.event_generate('<Configure>')
+        
+        # Redraw info container canvas
+        if 'info_container' in widgets and hasattr(widgets['info_container'], '_canvas'):
+            widgets['info_container']._canvas.event_generate('<Configure>')
+        
+        # Redraw text widget container canvases
+        for widget_name, _, _ in text_configs:
             if widget_name in widgets:
-                button = widgets[widget_name]
-                new_bg = theme[theme_key]
-                
-                # Canvas button (rounded)
-                if hasattr(button, '_is_canvas_button'):
-                    button._bg_color = new_bg
-                    # Redraw with new colors
-                    if hasattr(button, '_draw_button'):
-                        button._draw_button()
-                # Simple button
-                elif hasattr(button, '_is_container') and not button._is_container:
-                    button.config(bg=new_bg)
-                    button._bg_color = new_bg
-                # Fallback
-                else:
-                    try:
-                        button.config(bg=new_bg)
-                    except:
-                        pass
+                text_widget = widgets[widget_name]
+                if hasattr(text_widget, '_rounded_container'):
+                    container = text_widget._rounded_container
+                    if hasattr(container, '_canvas'):
+                        container._canvas.event_generate('<Configure>')
 
 class DialogHelper:
     """Helper for creating dialogs"""
