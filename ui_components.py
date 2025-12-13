@@ -76,6 +76,14 @@ class UIConfig:
     CARD_BORDER_RADIUS = 20          # Corner roundness of main card
     BUTTON_BORDER_RADIUS = 8         # Corner roundness of buttons
     
+    # Navigation bar
+    NAV_BAR_PADX = 40                # Horizontal padding for nav bar
+    NAV_BAR_PADY = 8                 # Vertical padding for nav bar
+    NAV_BUTTON_PADX = 12             # Padding inside nav buttons
+    NAV_BUTTON_PADY = 6              # Padding inside nav buttons
+    NAV_BUTTON_SPACING = 4           # Space between nav buttons
+    NAV_BUTTON_FONT_SIZE = 11        # Font size for nav buttons
+    
     # Main buttons (Audio, Show Answer)
     MAIN_BUTTON_PADX = 18
     MAIN_BUTTON_PADY = 8
@@ -150,6 +158,10 @@ class Themes:
         'info_fg': '#495057',
         'label_fg': '#666666',
         'hint_fg': '#666666',
+        'nav_bg': '#e0e0e0',
+        'nav_btn_bg': '#d0d0d0',
+        'nav_btn_fg': '#333333',
+        'nav_btn_hover': '#c0c0c0',
         'btn_audio': '#607d8b',
         'btn_answer': '#78909c',
         'btn_again': '#e57373',
@@ -171,6 +183,10 @@ class Themes:
         'info_fg': '#e0e0e0',
         'label_fg': '#888888',
         'hint_fg': '#888888',
+        'nav_bg': '#2a2a2a',
+        'nav_btn_bg': '#3a3a3a',
+        'nav_btn_fg': '#e0e0e0',
+        'nav_btn_hover': '#4a4a4a',
         'btn_audio': '#546e7a',
         'btn_answer': '#5f7780',
         'btn_again': '#c62828',
@@ -183,6 +199,177 @@ class Themes:
     def get_theme(dark_mode=False):
         """Get theme colors based on mode"""
         return Themes.DARK if dark_mode else Themes.LIGHT
+
+
+# ============================================================================
+#                           DROPDOWN MENU BUTTON CLASS
+# ============================================================================
+
+class DropdownMenuButton:
+    """A button that shows a dropdown menu when clicked - uses same rounded style as other buttons"""
+    
+    def __init__(self, parent, text, theme, menu_items):
+        """
+        Create a dropdown menu button with rounded corners matching app style
+        
+        Args:
+            parent: Parent widget
+            text: Button label text
+            theme: Current theme dictionary
+            menu_items: List of menu items, each is either:
+                - dict with 'label' and 'command' for regular items
+                - dict with 'label' and 'submenu' (list of items) for submenus
+                - dict with 'separator': True for separators
+                - dict with 'label', 'variable', 'command' for checkbutton items
+        """
+        self.parent = parent
+        self.text = f"  {text} ▼"
+        self.theme = theme
+        self.menu_items = menu_items
+        self.menu = None
+        
+        # Create canvas for rounded button (same approach as UIBuilder.create_button)
+        self.canvas = tk.Canvas(
+            parent,
+            highlightthickness=0,
+            bd=0,
+            bg=parent.cget('bg') if hasattr(parent, 'cget') else theme['nav_bg']
+        )
+        
+        # Store properties
+        self.canvas._bg_color = theme['nav_btn_bg']
+        self.canvas._text = self.text
+        self.canvas._padx = UIConfig.NAV_BUTTON_PADX
+        self.canvas._pady = UIConfig.NAV_BUTTON_PADY
+        self.canvas._font_size = UIConfig.NAV_BUTTON_FONT_SIZE
+        self.canvas._state = tk.NORMAL
+        self.canvas._is_canvas_button = True
+        
+        # Bind events
+        self.canvas.bind('<Button-1>', self._on_click)
+        self.canvas.bind('<Enter>', self._on_enter)
+        self.canvas.bind('<Leave>', self._on_leave)
+        
+        # Initial draw
+        self.canvas.after(10, self._draw_button)
+        self.canvas._draw_button = self._draw_button
+    
+    def _draw_button(self):
+        """Draw the rounded button - same style as other app buttons"""
+        self.canvas.delete("all")
+        
+        padx = self.canvas._padx
+        pady = self.canvas._pady
+        font_size = self.canvas._font_size
+        text = self.canvas._text
+        
+        # Measure text size
+        font = ('Helvetica', font_size, 'bold')
+        temp_text = self.canvas.create_text(0, 0, text=text, font=font)
+        bbox = self.canvas.bbox(temp_text)
+        self.canvas.delete(temp_text)
+        
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        
+        # Calculate canvas size
+        width = text_width + padx * 2
+        height = text_height + pady * 2
+        radius = UIConfig.BUTTON_BORDER_RADIUS
+        
+        # Update canvas size
+        self.canvas.config(width=width, height=height)
+        
+        # Get parent background
+        try:
+            parent_bg = self.parent.cget('bg')
+        except:
+            parent_bg = self.theme['nav_bg']
+        self.canvas.config(bg=parent_bg)
+        
+        # Draw rounded rectangle
+        current_bg = self.canvas._bg_color
+        self.canvas.create_arc(0, 0, radius*2, radius*2, start=90, extent=90, fill=current_bg, outline=current_bg, tags="bg")
+        self.canvas.create_arc(width-radius*2, 0, width, radius*2, start=0, extent=90, fill=current_bg, outline=current_bg, tags="bg")
+        self.canvas.create_arc(0, height-radius*2, radius*2, height, start=180, extent=90, fill=current_bg, outline=current_bg, tags="bg")
+        self.canvas.create_arc(width-radius*2, height-radius*2, width, height, start=270, extent=90, fill=current_bg, outline=current_bg, tags="bg")
+        self.canvas.create_rectangle(radius, 0, width-radius, height, fill=current_bg, outline=current_bg, tags="bg")
+        self.canvas.create_rectangle(0, radius, width, height-radius, fill=current_bg, outline=current_bg, tags="bg")
+        
+        # Draw text
+        text_color = self.theme['nav_btn_fg']
+        self.canvas.create_text(
+            width/2, height/2,
+            text=text,
+            font=font,
+            fill=text_color,
+            tags="text"
+        )
+    
+    def _on_click(self, event):
+        """Handle button click - show dropdown menu"""
+        self._show_menu()
+    
+    def _on_enter(self, event):
+        """Handle mouse enter (hover effect)"""
+        self.canvas.config(cursor='hand2')
+        self.canvas._bg_color = self.theme['nav_btn_hover']
+        self._draw_button()
+    
+    def _on_leave(self, event):
+        """Handle mouse leave"""
+        self.canvas.config(cursor='')
+        self.canvas._bg_color = self.theme['nav_btn_bg']
+        self._draw_button()
+    
+    def _show_menu(self):
+        """Show the dropdown menu below the button"""
+        if self.menu:
+            self.menu.destroy()
+        
+        self.menu = tk.Menu(self.canvas, tearoff=0)
+        self._build_menu(self.menu, self.menu_items)
+        
+        # Position menu below button
+        x = self.canvas.winfo_rootx()
+        y = self.canvas.winfo_rooty() + self.canvas.winfo_height()
+        self.menu.post(x, y)
+    
+    def _build_menu(self, menu, items):
+        """Recursively build menu from items list"""
+        for item in items:
+            if item.get('separator'):
+                menu.add_separator()
+            elif 'submenu' in item:
+                submenu = tk.Menu(menu, tearoff=0)
+                self._build_menu(submenu, item['submenu'])
+                menu.add_cascade(label=item['label'], menu=submenu)
+            elif 'variable' in item:
+                menu.add_checkbutton(
+                    label=item['label'],
+                    variable=item['variable'],
+                    command=item.get('command')
+                )
+            else:
+                menu.add_command(label=item['label'], command=item.get('command'))
+    
+    def pack(self, **kwargs):
+        self.canvas.pack(**kwargs)
+    
+    def grid(self, **kwargs):
+        self.canvas.grid(**kwargs)
+    
+    def update_theme(self, theme):
+        """Update button colors for theme change"""
+        self.theme = theme
+        self.canvas._bg_color = theme['nav_btn_bg']
+        # Update parent background reference
+        try:
+            parent_bg = self.parent.cget('bg')
+            self.canvas.config(bg=parent_bg)
+        except:
+            pass
+        self._draw_button()
 
 
 # ============================================================================
@@ -420,7 +607,7 @@ class UIBuilder:
         text_widget.insert('1.0', content)
         text_widget.config(state=tk.DISABLED)
     
-    def build_complete_interface(self, callbacks):
+    def build_complete_interface(self, callbacks, menu_callbacks=None, checkbox_vars=None):
         """
         Build the complete user interface with all widgets
         
@@ -433,17 +620,134 @@ class UIBuilder:
                 - 'mark_hard': Function to mark word as 'hard'
                 - 'mark_good': Function to mark word as 'good'
                 - 'mark_easy': Function to mark word as 'easy'
+            menu_callbacks: Optional dictionary with menu action callbacks for navigation bar
+            checkbox_vars: Optional dictionary with tk.BooleanVar for checkbox menu items
         
         Returns:
             Dictionary containing all created widgets with keys:
-            - Frames: 'top_bar', 'title_frame', 'theme_frame', 'card_frame', 
+            - Frames: 'nav_bar', 'top_bar', 'title_frame', 'theme_frame', 'card_frame', 
                      'button_frame', 'response_frame'
             - Labels: 'title_label', 'progress_label', 'stats_label', 'keyboard_hint'
             - Text widgets: 'hebrew_text', 'trans_text', 'english_text'
             - Buttons: 'theme_toggle_btn', 'audio_btn', 'show_answer_btn',
                       'again_btn', 'hard_btn', 'good_btn', 'easy_btn'
+            - Nav buttons: 'nav_study', 'nav_settings', 'nav_vocabulary', 'nav_help'
         """
         widgets = {}
+        
+        # ===== NAVIGATION BAR =====
+        if menu_callbacks:
+            nav_bar = tk.Frame(self.root, bg=self.theme['nav_bg'])
+            nav_bar.pack(fill=tk.X, padx=0, pady=0)
+            widgets['nav_bar'] = nav_bar
+            
+            nav_buttons_frame = tk.Frame(nav_bar, bg=self.theme['nav_bg'])
+            nav_buttons_frame.pack(
+                padx=UIConfig.NAV_BAR_PADX, 
+                pady=UIConfig.NAV_BAR_PADY,
+                anchor='w'
+            )
+            widgets['nav_buttons_frame'] = nav_buttons_frame
+            
+            # Build Study menu items
+            study_items = [
+                {'label': 'Quick Start', 'submenu': [
+                    {'label': 'Top 50 Words', 'command': menu_callbacks.get('start_50')},
+                    {'label': 'Top 100 Words', 'command': menu_callbacks.get('start_100')},
+                    {'label': 'Top 200 Words', 'command': menu_callbacks.get('start_200')},
+                    {'label': 'All Words', 'command': menu_callbacks.get('start_all')},
+                    {'separator': True},
+                    {'label': 'Custom Range...', 'command': menu_callbacks.get('custom_range')},
+                ]},
+                {'separator': True},
+                {'label': 'Smart Study', 'submenu': [
+                    {'label': 'SRS Review (Due Today)', 'command': menu_callbacks.get('srs_review')},
+                    {'label': 'Learn New Words', 'command': menu_callbacks.get('new_words')},
+                    {'label': 'Review Weakest Words', 'command': menu_callbacks.get('weak_words')},
+                    {'label': 'Review Strongest Words', 'command': menu_callbacks.get('strong_words')},
+                    {'separator': True},
+                    {'label': 'Practice Difficult (Top 50)', 'command': menu_callbacks.get('difficult_50')},
+                    {'label': 'Practice Difficult (Top 100)', 'command': menu_callbacks.get('difficult_100')},
+                ]},
+                {'separator': True},
+                {'label': 'By Category', 'submenu': [
+                    {'label': 'Greetings', 'command': menu_callbacks.get('cat_greetings')},
+                    {'label': 'Common Words', 'command': menu_callbacks.get('cat_common')},
+                    {'label': 'Verbs', 'command': menu_callbacks.get('cat_verbs')},
+                    {'label': 'Nouns', 'command': menu_callbacks.get('cat_nouns')},
+                    {'label': 'Adjectives', 'command': menu_callbacks.get('cat_adjectives')},
+                    {'separator': True},
+                    {'label': 'Biblical Hebrew', 'command': menu_callbacks.get('cat_biblical')},
+                    {'label': 'Torah', 'command': menu_callbacks.get('cat_torah')},
+                    {'separator': True},
+                    {'label': 'Prepositions', 'command': menu_callbacks.get('cat_prepositions')},
+                    {'label': 'Basic Vocabulary', 'command': menu_callbacks.get('cat_basic')},
+                ]},
+                {'separator': True},
+                {'label': 'By Type', 'submenu': [
+                    {'label': 'Modern Hebrew', 'command': menu_callbacks.get('type_modern')},
+                    {'label': 'Biblical Hebrew', 'command': menu_callbacks.get('type_biblical')},
+                    {'label': 'Both Modern & Biblical', 'command': menu_callbacks.get('type_both')},
+                    {'separator': True},
+                    {'label': 'Verbs Only', 'command': menu_callbacks.get('pos_verb')},
+                    {'label': 'Nouns Only', 'command': menu_callbacks.get('pos_noun')},
+                    {'label': 'Adjectives Only', 'command': menu_callbacks.get('pos_adjective')},
+                    {'label': 'Prepositions Only', 'command': menu_callbacks.get('pos_preposition')},
+                ]},
+                {'separator': True},
+                {'label': 'Random 10 Words', 'command': menu_callbacks.get('random_10')},
+            ]
+            
+            widgets['nav_study'] = DropdownMenuButton(
+                nav_buttons_frame, "Study", self.theme, study_items
+            )
+            widgets['nav_study'].pack(side=tk.LEFT, padx=UIConfig.NAV_BUTTON_SPACING)
+            
+            # Build Settings menu items
+            settings_items = []
+            if checkbox_vars:
+                settings_items = [
+                    {'label': 'Show Variants', 'variable': checkbox_vars.get('show_variants'), 
+                     'command': menu_callbacks.get('toggle_variants')},
+                    {'label': 'Show Translations', 'variable': checkbox_vars.get('show_translations'),
+                     'command': menu_callbacks.get('toggle_translations')},
+                    {'separator': True},
+                    {'label': 'Auto-play Audio', 'variable': checkbox_vars.get('auto_play'),
+                     'command': menu_callbacks.get('toggle_auto_play')},
+                    {'separator': True},
+                    {'label': 'Toggle Dark Mode', 'command': callbacks['toggle_theme']},
+                    {'separator': True},
+                    {'label': 'Reset Progress', 'command': menu_callbacks.get('reset_progress')},
+                ]
+            else:
+                settings_items = [
+                    {'label': 'Toggle Dark Mode', 'command': callbacks['toggle_theme']},
+                ]
+            
+            widgets['nav_settings'] = DropdownMenuButton(
+                nav_buttons_frame, "Settings", self.theme, settings_items
+            )
+            widgets['nav_settings'].pack(side=tk.LEFT, padx=UIConfig.NAV_BUTTON_SPACING)
+            
+            # Build Vocabulary menu items
+            vocab_items = [
+                {'label': 'View Statistics', 'command': menu_callbacks.get('show_statistics')},
+            ]
+            
+            widgets['nav_vocabulary'] = DropdownMenuButton(
+                nav_buttons_frame, "Vocabulary", self.theme, vocab_items
+            )
+            widgets['nav_vocabulary'].pack(side=tk.LEFT, padx=UIConfig.NAV_BUTTON_SPACING)
+            
+            # Build Help menu items
+            help_items = [
+                {'label': 'About', 'command': menu_callbacks.get('show_about')},
+            ]
+            
+            widgets['nav_help'] = DropdownMenuButton(
+                nav_buttons_frame, "Help", self.theme, help_items
+            )
+            widgets['nav_help'].pack(side=tk.LEFT, padx=UIConfig.NAV_BUTTON_SPACING)
         
         # ===== TOP BAR WITH TITLE AND THEME TOGGLE =====
         top_bar = tk.Frame(self.root, bg=self.theme['bg'])
@@ -707,6 +1011,18 @@ class UIBuilder:
         """Apply theme to all widgets in correct order to avoid incomplete updates"""
         # Store new theme reference
         self.theme = theme
+        
+        # PHASE 0: Update navigation bar
+        if 'nav_bar' in widgets:
+            widgets['nav_bar'].config(bg=theme['nav_bg'])
+        if 'nav_buttons_frame' in widgets:
+            widgets['nav_buttons_frame'].config(bg=theme['nav_bg'])
+        
+        # Update navigation dropdown buttons
+        nav_buttons = ['nav_study', 'nav_settings', 'nav_vocabulary', 'nav_help']
+        for nav_name in nav_buttons:
+            if nav_name in widgets:
+                widgets[nav_name].update_theme(theme)
         
         # PHASE 1: Update root and all plain frames first (they are parents of other widgets)
         self.root.config(bg=theme['bg'])

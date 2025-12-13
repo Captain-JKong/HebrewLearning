@@ -60,8 +60,7 @@ class HebrewLearningApp:
         # Set icon
         self._set_icon()
         
-        # Build interface
-        self.create_menu()
+        # Build interface (navigation bar is built within create_main_interface)
         self.widgets = self.create_main_interface()
         self.setup_keyboard_shortcuts()
     
@@ -88,102 +87,67 @@ class HebrewLearningApp:
             except tk.TclError:
                 pass
     
-    def create_menu(self):
-        """Create menu bar"""
-        menubar = tk.Menu(self.root)
-        self.root.config(menu=menubar)
-        
-        # Study Menu
-        study_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Study", menu=study_menu)
-        
-        # Quick Start submenu
-        quick_menu = tk.Menu(study_menu, tearoff=0)
-        study_menu.add_cascade(label="Quick Start", menu=quick_menu)
-        quick_menu.add_command(label="Top 50 Words", command=lambda: self.start_session(50))
-        quick_menu.add_command(label="Top 100 Words", command=lambda: self.start_session(100))
-        quick_menu.add_command(label="Top 200 Words", command=lambda: self.start_session(200))
-        quick_menu.add_command(label="All Words", command=lambda: self.start_session(None))
-        quick_menu.add_separator()
-        quick_menu.add_command(label="Custom Range...", command=self.show_custom_range_dialog)
-        
-        study_menu.add_separator()
-        
-        # Smart Study submenu
-        smart_menu = tk.Menu(study_menu, tearoff=0)
-        study_menu.add_cascade(label="Smart Study", menu=smart_menu)
-        smart_menu.add_command(label="SRS Review (Due Today)", command=self.start_srs_session)
-        smart_menu.add_command(label="Learn New Words", command=self.start_new_words_session)
-        smart_menu.add_command(label="Review Weakest Words", command=self.start_weak_words_session)
-        smart_menu.add_command(label="Review Strongest Words", command=self.start_strong_words_session)
-        smart_menu.add_separator()
-        smart_menu.add_command(label="Practice Difficult (Top 50)", command=lambda: self.practice_difficult_words(50))
-        smart_menu.add_command(label="Practice Difficult (Top 100)", command=lambda: self.practice_difficult_words(100))
-        
-        study_menu.add_separator()
-        
-        # By Category submenu
-        category_menu = tk.Menu(study_menu, tearoff=0)
-        study_menu.add_cascade(label="By Category", menu=category_menu)
-        category_menu.add_command(label="Greetings", command=lambda: self.start_category_session("Greetings"))
-        category_menu.add_command(label="Common Words", command=lambda: self.start_category_session("Common Words"))
-        category_menu.add_command(label="Verbs", command=lambda: self.start_category_session("Verbs"))
-        category_menu.add_command(label="Nouns", command=lambda: self.start_category_session("Nouns"))
-        category_menu.add_command(label="Adjectives", command=lambda: self.start_category_session("Adjectives"))
-        category_menu.add_separator()
-        category_menu.add_command(label="Biblical Hebrew", command=lambda: self.start_category_session("Biblical Hebrew"))
-        category_menu.add_command(label="Torah", command=lambda: self.start_category_session("Torah"))
-        category_menu.add_separator()
-        category_menu.add_command(label="Prepositions", command=lambda: self.start_category_session("Prepositions"))
-        category_menu.add_command(label="Basic Vocabulary", command=lambda: self.start_category_session("Basic Vocabulary"))
-        
-        study_menu.add_separator()
-        
-        # By Type submenu
-        type_menu = tk.Menu(study_menu, tearoff=0)
-        study_menu.add_cascade(label="By Type", menu=type_menu)
-        type_menu.add_command(label="Modern Hebrew", command=lambda: self.start_register_session("modern"))
-        type_menu.add_command(label="Biblical Hebrew", command=lambda: self.start_register_session("biblical"))
-        type_menu.add_command(label="Both Modern & Biblical", command=lambda: self.start_register_session("both"))
-        type_menu.add_separator()
-        type_menu.add_command(label="Verbs Only", command=lambda: self.start_part_of_speech_session("verb"))
-        type_menu.add_command(label="Nouns Only", command=lambda: self.start_part_of_speech_session("noun"))
-        type_menu.add_command(label="Adjectives Only", command=lambda: self.start_part_of_speech_session("adjective"))
-        type_menu.add_command(label="Prepositions Only", command=lambda: self.start_part_of_speech_session("preposition"))
-        
-        study_menu.add_separator()
-        study_menu.add_command(label="Random 10 Words", command=self.start_random_session)
-        
-        # Settings Menu
-        settings_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Settings", menu=settings_menu)
-        
-        # Create persistent checkbox variables
+    def _get_menu_callbacks(self):
+        """Get all menu action callbacks for the navigation bar"""
+        return {
+            # Quick Start
+            'start_50': lambda: self.start_session(50),
+            'start_100': lambda: self.start_session(100),
+            'start_200': lambda: self.start_session(200),
+            'start_all': lambda: self.start_session(None),
+            'custom_range': self.show_custom_range_dialog,
+            
+            # Smart Study
+            'srs_review': self.start_srs_session,
+            'new_words': self.start_new_words_session,
+            'weak_words': self.start_weak_words_session,
+            'strong_words': self.start_strong_words_session,
+            'difficult_50': lambda: self.practice_difficult_words(50),
+            'difficult_100': lambda: self.practice_difficult_words(100),
+            
+            # By Category
+            'cat_greetings': lambda: self.start_category_session("Greetings"),
+            'cat_common': lambda: self.start_category_session("Common Words"),
+            'cat_verbs': lambda: self.start_category_session("Verbs"),
+            'cat_nouns': lambda: self.start_category_session("Nouns"),
+            'cat_adjectives': lambda: self.start_category_session("Adjectives"),
+            'cat_biblical': lambda: self.start_category_session("Biblical Hebrew"),
+            'cat_torah': lambda: self.start_category_session("Torah"),
+            'cat_prepositions': lambda: self.start_category_session("Prepositions"),
+            'cat_basic': lambda: self.start_category_session("Basic Vocabulary"),
+            
+            # By Type
+            'type_modern': lambda: self.start_register_session("modern"),
+            'type_biblical': lambda: self.start_register_session("biblical"),
+            'type_both': lambda: self.start_register_session("both"),
+            'pos_verb': lambda: self.start_part_of_speech_session("verb"),
+            'pos_noun': lambda: self.start_part_of_speech_session("noun"),
+            'pos_adjective': lambda: self.start_part_of_speech_session("adjective"),
+            'pos_preposition': lambda: self.start_part_of_speech_session("preposition"),
+            
+            # Random
+            'random_10': self.start_random_session,
+            
+            # Settings
+            'toggle_variants': self.toggle_variants,
+            'toggle_translations': self.toggle_translations,
+            'toggle_auto_play': self.toggle_auto_play,
+            'reset_progress': self.reset_progress,
+            
+            # Vocabulary
+            'show_statistics': self.show_statistics,
+            
+            # Help
+            'show_about': self.show_about,
+        }
+    
+    def create_main_interface(self):
+        """Create the main interface - all UI details are in ui_components.py"""
+        # Create persistent checkbox variables for settings menu
         self.show_variants_var = tk.BooleanVar(value=self.show_variants)
         self.show_translations_var = tk.BooleanVar(value=self.show_translations)
         self.auto_play_var = tk.BooleanVar(value=self.auto_play_audio)
         
-        settings_menu.add_checkbutton(label="Show Variants", variable=self.show_variants_var, command=self.toggle_variants)
-        settings_menu.add_checkbutton(label="Show Translations", variable=self.show_translations_var, command=self.toggle_translations)
-        settings_menu.add_separator()
-        settings_menu.add_checkbutton(label="Auto-play Audio", variable=self.auto_play_var, command=self.toggle_auto_play)
-        settings_menu.add_separator()
-        settings_menu.add_command(label="Toggle Dark Mode", command=self.toggle_theme)
-        settings_menu.add_separator()
-        settings_menu.add_command(label="Reset Progress", command=self.reset_progress)
-        
-        # Vocabulary Menu
-        vocab_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Vocabulary", menu=vocab_menu)
-        vocab_menu.add_command(label="View Statistics", command=self.show_statistics)
-        
-        # Help Menu
-        help_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Help", menu=help_menu)
-        help_menu.add_command(label="About", command=self.show_about)
-    
-    def create_main_interface(self):
-        """Create the main interface - all UI details are in ui_components.py"""
         # Define callback functions for the UI
         callbacks = {
             'toggle_theme': self.toggle_theme,
@@ -195,8 +159,18 @@ class HebrewLearningApp:
             'mark_easy': lambda: self.mark_answer('easy')
         }
         
-        # Build complete interface with all widgets
-        widgets = self.ui_builder.build_complete_interface(callbacks)
+        # Get menu callbacks for navigation bar
+        menu_callbacks = self._get_menu_callbacks()
+        
+        # Checkbox variables for settings menu
+        checkbox_vars = {
+            'show_variants': self.show_variants_var,
+            'show_translations': self.show_translations_var,
+            'auto_play': self.auto_play_var,
+        }
+        
+        # Build complete interface with all widgets including navigation bar
+        widgets = self.ui_builder.build_complete_interface(callbacks, menu_callbacks, checkbox_vars)
         
         # Update theme toggle button icon based on current mode
         widgets['theme_toggle_btn']._text = "☀️" if self.dark_mode else "🌙"
@@ -228,7 +202,7 @@ class HebrewLearningApp:
         self.ui_builder.update_text(widgets['hebrew_text'], "Welcome! 🎓")
         self.ui_builder.update_text(
             widgets['trans_text'],
-            "Select 'Study' from the menu bar above\nto begin learning Hebrew!"
+            "Click 'Study' above to begin learning Hebrew!"
         )
         self.ui_builder.update_text(widgets['english_text'], "")
     
